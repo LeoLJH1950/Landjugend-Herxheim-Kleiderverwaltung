@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Landjugend Herxheim – Kleiderverwaltung</title>
+
+<style>
+    :root {
+        --blau: #0077cc;
+        --gruen: #3cb043;
+        --rot: #dc3545;
+        --weiss: #ffffff;
+        --hellgrau: #f5f5f5;
+    }
+
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: var(--hellgrau);
+    }
+
+    /* Passwort-Overlay */
+    #passwortOverlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    #passwortBox {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 350px;
+        text-align: center;
+    }
+
+    #passwortBox input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+    }
+
+    #passwortBox button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        background: var(--blau);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    header {
+        background: linear-gradient(90deg, var(--blau), var(--gruen));
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 20px auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    h2 {
+        border-left: 6px solid var(--gruen);
+        padding-left: 10px;
+    }
+
+    form {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    input, select {
+        padding: 6px;
+        width: 100%;
+    }
+
+    button.primary {
+        background: var(--blau);
+        color: white;
+        border: none;
+        padding: 7px 12px;
+        border-radius: 4px;
+    }
+
+    button.small {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+
+    button.secondary {
+        background: var(--gruen);
+        color: white;
+        border: none;
+        padding: 7px 12px;
+        border-radius: 4px;
+    }
+
+    button.danger {
+        background: var(--rot);
+        color: white;
+        border: none;
+        padding: 7px 12px;
+        border-radius: 4px;
+    }
+
+    /* Gruppen */
+    .gruppe {
+        background: #e9f5ff;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .gruppe:hover {
+        background: #d8edff;
+    }
+
+    .untergruppe {
+        margin-left: 20px;
+        margin-bottom: 20px;
+        display: none;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    th {
+        background: var(--blau);
+        color: white;
+        padding: 8px;
+    }
+
+    td {
+        padding: 6px;
+        border: 1px solid #ddd;
+    }
+
+    .low-stock {
+        background: #fff3cd;
+    }
+
+    /* Popup */
+    #popup {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #popupContent {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 350px;
+    }
+</style>
+</head>
+<body>
+
+<!-- Passwort -->
+<div id="passwortOverlay">
+    <div id="passwortBox">
+        <h2>Passwort eingeben</h2>
+        <input type="password" id="pwInput">
+        <button onclick="checkPasswort()">Weiter</button>
+        <p id="pwFehler" style="color:red; display:none;">Falsches Passwort</p>
+    </div>
+</div>
+
+<script>
+const PASSWORT = "LJH1950";
+function checkPasswort() {
+    if (document.getElementById("pwInput").value === PASSWORT) {
+        document.getElementById("passwortOverlay").style.display = "none";
+    } else {
+        document.getElementById("pwFehler").style.display = "block";
+    }
+}
+</script>
+
+<header>
+    <h1>Landjugend Herxheim – Kleiderverwaltung</h1>
+</header>
+
+<div class="container">
+
+    <h2>Neuen Artikel hinzufügen</h2>
+    <form id="addForm">
+        <input type="text" id="name" placeholder="Artikelname" required>
+        <select id="kategorie">
+            <option>Damen</option>
+            <option>Herren</option>
+            <option>Unisex</option>
+            <option>Kinder</option>
+        </select>
+        <input type="text" id="groesse" placeholder="Größe" required>
+        <input type="number" id="bestand" min="0" value="0" required>
+        <button class="primary" type="submit">Hinzufügen</button>
+    </form>
+
+    <h2>Bestand</h2>
+    <div id="gruppenContainer"></div>
+
+    <h2>Offene Zahlungen</h2>
+    <div id="offeneListe"></div>
+
+    <button id="resetAll" class="danger">Alle Daten löschen</button>
+</div>
+
+<!-- Popup -->
+<div id="popup">
+    <div id="popupContent">
+        <h3>Offene Zahlung erfassen</h3>
+        <input type="text" id="popupName" placeholder="Name">
+        <input type="number" id="popupBetrag" step="0.01" placeholder="Betrag (€)">
+        <button id="popupSave" class="primary">Speichern</button>
+        <button id="popupCancel" class="secondary">Abbrechen</button>
+    </div>
+</div>
+
+<script>
+let artikelListe = [];
+let offeneZahlungen = [];
+let aktuellerArtikelID = null;
+
+const STORAGE_KEY = "kleiderverwaltung_v4";
+
+function ladeDaten() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+        const data = JSON.parse(raw);
+        artikelListe = data.artikel || [];
+        offeneZahlungen = data.offen || [];
+    }
+}
+
+function speichereDaten() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        artikel: artikelListe,
+        offen: offeneZahlungen
+    }));
+}
+
+function gruppiereArtikel() {
+    const gruppen = {};
+
+    artikelListe.forEach(a => {
+        const key = a.name + "___" + a.kategorie;
+        if (!gruppen[key]) gruppen[key] = [];
+        gruppen[key].push(a);
+    });
+
+    return gruppen;
+}
+
+function renderGruppen() {
+    const container = document.getElementById("gruppenContainer");
+    container.innerHTML = "";
+
+    const gruppen = gruppiereArtikel();
+
+    Object.keys(gruppen).forEach(key => {
+        const [name, kategorie] = key.split("___");
+
+        const gruppeDiv = document.createElement("div");
+        gruppeDiv.className = "gruppe";
+        gruppeDiv.textContent = `${name} (${kategorie})`;
+
+        const unter = document.createElement("div");
+        unter.className = "untergruppe";
+
+        const table = document.createElement("table");
+        table.innerHTML = `
+            <tr>
+                <th>Größe</th>
+                <th>Bestand</th>
+                <th>Aktionen</th>
+            </tr>
+        `;
+
+        gruppen[key].forEach(a => {
+            const tr = document.createElement("tr");
+            if (a.bestand <= 3) tr.classList.add("low-stock");
+
+            tr.innerHTML = `
+                <td>${a.groesse}</td>
+                <td>${a.bestand}</td>
+                <td>
+                    <button class="small primary" onclick="plus('${a.id}')">+1</button>
+                    <button class="small secondary" onclick="minus('${a.id}')">-1</button>
+                    <button class="small danger" onclick="delArtikel('${a.id}')">Löschen</button>
+                </td>
+            `;
+
+            table.appendChild(tr);
+        });
+
+        unter.appendChild(table);
+
+        gruppeDiv.onclick = () => {
+            unter.style.display = unter.style.display === "block" ? "none" : "block";
+        };
+
+        container.appendChild(gruppeDiv);
+        container.appendChild(unter);
+    });
+}
+
+function renderOffene() {
+    const div = document.getElementById("offeneListe");
+    div.innerHTML = "";
+
+    offeneZahlungen.forEach((o, i) => {
+        const d = document.createElement("div");
+        d.style.padding = "10px";
+        d.style.borderBottom = "1px solid #ccc";
+
+        d.innerHTML = `
+            <strong>${o.name}</strong> – ${o.artikel} (${o.groesse})<br>
+            Betrag: <strong>${o.betrag} €</strong><br>
+            <button class="secondary small" onclick="bezahlt(${i})">Als bezahlt markieren</button>
+        `;
+
+        div.appendChild(d);
+    });
+}
+
+function addArtikel(name, kategorie, groesse, bestand) {
+    artikelListe.push({
+        id: Date.now().toString(),
+        name, kategorie, groesse, bestand
+    });
+    speichereDaten();
+    renderGruppen();
+}
+
+function plus(id) {
+    const a = artikelListe.find(x => x.id === id);
+    a.bestand++;
+    speichereDaten();
+    renderGruppen();
+}
+
+function minus(id) {
+    aktuellerArtikelID = id;
+    document.getElementById("popup").style.display = "flex";
+}
+
+popupSave.onclick = () => {
+    const name = popupName.value.trim();
+    const betrag = popupBetrag.value.trim();
+    if (!name || !betrag) return;
+
+    const a = artikelListe.find(x => x.id === aktuellerArtikelID);
+    a.bestand--;
+
+    offeneZahlungen.push({
+        name,
+        betrag,
+        artikel: a.name,
+        groesse: a.groesse
+    });
+
+    popupName.value = "";
+    popupBetrag.value = "";
+    document.getElementById("popup").style.display = "none";
+
+    speichereDaten();
+    renderGruppen();
+    renderOffene();
+};
+
+popupCancel.onclick = () => {
+    document.getElementById("popup").style.display = "none";
+};
+
+function bezahlt(i) {
+    offeneZahlungen.splice(i, 1);
+    speichereDaten();
+    renderOffene();
+}
+
+function delArtikel(id) {
+    artikelListe = artikelListe.filter(a => a.id !== id);
+    speichereDaten();
+    renderGruppen();
+}
+
+document.getElementById("addForm").addEventListener("submit", e => {
+    e.preventDefault();
+    addArtikel(
+        document.getElementById("name").value,
+        document.getElementById("kategorie").value,
+        document.getElementById("groesse").value,
+        parseInt(document.getElementById("bestand").value)
+    );
+    e.target.reset();
+});
+
+document.getElementById("resetAll").onclick = () => {
+    if (confirm("Wirklich ALLE Daten löschen?")) {
+        artikelListe = [];
+        offeneZahlungen = [];
+        speichereDaten();
+        renderGruppen();
+        renderOffene();
+    }
+};
+
+ladeDaten();
+renderGruppen();
+renderOffene();
+</script>
+
+</body>
+</html>
