@@ -2,148 +2,48 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Landjugend Herxheim – Kleiderverwaltung</title>
+<title>Kleiderverwaltung LJH</title>
 
 <style>
-:root {
-    --blau:#0077cc;
-    --gruen:#3cb043;
-    --rot:#dc3545;
-    --hellgrau:#f5f5f5;
+body {font-family: Arial; margin:0; background:#f5f5f5;}
+header {background:linear-gradient(90deg,#0077cc,#3cb043); color:white; padding:20px; text-align:center;}
+
+.container {max-width:900px; margin:20px auto; background:white; padding:20px; border-radius:10px;}
+
+form {display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
+input,select {padding:6px;}
+
+button {padding:6px 10px; border:none; cursor:pointer;}
+.primary {background:#0077cc; color:white;}
+.secondary {background:#3cb043; color:white;}
+.danger {background:#dc3545; color:white;}
+
+.group {background:#e9f5ff; margin-top:10px; padding:10px; border-radius:6px;}
+.sub {margin-left:15px;}
+
+.item {background:white; border:1px solid #ddd; margin-top:5px; padding:6px;}
+
+#popup,#payPopup{
+position:fixed; top:0; left:0; width:100%; height:100%;
+background:rgba(0,0,0,0.5);
+display:none; justify-content:center; align-items:center;
 }
 
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background: var(--hellgrau);
-}
-
-/* Passwort */
-#passwortOverlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-#passwortBox {
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 350px;
-    text-align: center;
-}
-
-header {
-    background: linear-gradient(90deg, var(--blau), var(--gruen));
-    color: white;
-    padding: 20px;
-    text-align: center;
-}
-
-.container {
-    max-width: 900px;
-    margin: 20px auto;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-}
-
-h2 {
-    border-left: 6px solid var(--gruen);
-    padding-left: 10px;
-}
-
-form {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-}
-
-input, select {
-    padding: 6px;
-}
-
-button.primary { background: var(--blau); color: white; }
-button.secondary { background: var(--gruen); color: white; }
-button.danger { background: var(--rot); color: white; }
-button.small { font-size: 12px; padding: 4px 6px; }
-
-.gruppe {
-    background:#e9f5ff;
-    padding:12px;
-    margin-top:10px;
-    cursor:pointer;
-    font-weight:bold;
-}
-
-.untergruppe {
-    display:none;
-    margin-left:15px;
-}
-
-table {
-    width:100%;
-    border-collapse:collapse;
-    margin-top:10px;
-}
-
-th {
-    background:var(--blau);
-    color:white;
-}
-
-td {
-    border:1px solid #ddd;
-    padding:6px;
-}
-
-.low-stock {
-    background:#fff3cd;
-}
-
-#popup {
-    position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.5);
-    display:none;
-    justify-content:center;
-    align-items:center;
-}
-
-#popupContent {
-    background:white;
-    padding:20px;
-    border-radius:8px;
-}
+.box {background:white; padding:20px; border-radius:8px; width:300px;}
 </style>
 </head>
 
 <body>
 
 <!-- PASSWORT -->
-<div id="passwortOverlay">
-    <div id="passwortBox">
-        <h2>Passwort</h2>
-        <input type="password" id="pwInput">
-        <button onclick="checkPasswort()">Weiter</button>
-    </div>
+<div id="lock">
+<div class="box">
+<h2>Passwort</h2>
+<input id="pw" type="password">
+<button onclick="check()">Enter</button>
+<p id="err" style="color:red; display:none;">Falsch</p>
 </div>
-
-<script>
-const PASSWORT="LJH1950";
-function checkPasswort(){
-    if(document.getElementById("pwInput").value===PASSWORT){
-        document.getElementById("passwortOverlay").style.display="none";
-    }
-}
-</script>
+</div>
 
 <header>
 <h1>Kleiderverwaltung</h1>
@@ -151,43 +51,45 @@ function checkPasswort(){
 
 <div class="container">
 
-<h2>Neuen Artikel hinzufügen</h2>
-
-<form id="addForm">
-    <input id="name" placeholder="Artikelname">
-    <select id="kategorie">
-        <option>Damen</option>
-        <option>Herren</option>
-        <option>Unisex</option>
-        <option>Kinder</option>
-    </select>
-    <input id="groesse" placeholder="Größe">
-    <input id="bestand" type="number" placeholder="Bestand">
-    <button class="primary" type="submit">Hinzufügen</button>
+<h2>Artikel hinzufügen</h2>
+<form id="form">
+<input id="name" placeholder="Artikel (z.B. Hose)">
+<select id="kat">
+<option>Damen</option>
+<option>Herren</option>
+</select>
+<input id="size" placeholder="Größe (S/M/L)">
+<input id="count" type="number" placeholder="Bestand">
+<button class="primary">Hinzufügen</button>
 </form>
 
 <h2>Bestand</h2>
-<div id="gruppenContainer"></div>
+<div id="list"></div>
 
-<h2>Offene Zahlungen</h2>
-<div id="offeneListe"></div>
-
-<button id="resetAll" class="danger">Alles löschen</button>
+<h2>Offene Rechnungen</h2>
+<div id="open"></div>
 
 </div>
 
-<!-- POPUP -->
-<div id="popup">
-<div id="popupContent">
-    <h3>Offene Zahlung</h3>
-    <input id="popupName" placeholder="Name">
-    <input id="popupBetrag" placeholder="Betrag">
-    <button id="popupSave" class="primary">Speichern</button>
-    <button id="popupCancel" class="secondary">Abbrechen</button>
+<!-- PAYMENT POPUP -->
+<div id="payPopup">
+<div class="box">
+<h3>Verkauf erfassen</h3>
+
+<p>Bezahlt direkt?</p>
+<button onclick="directPay(true)">Ja</button>
+<button onclick="directPay(false)">Nein</button>
+
+<div id="details" style="display:none;">
+<input id="buyer" placeholder="Name">
+<input id="amount" placeholder="Betrag">
+<button onclick="saveDebt()">Speichern</button>
+</div>
+
+<button onclick="closePay()">Abbrechen</button>
 </div>
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
@@ -213,192 +115,187 @@ appId:"1:76446271591:web:ecd096fa6c9afa570fecc2"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-let artikelListe=[];
-let offeneZahlungen=[];
-let aktuelleID=null;
+let data=[];
+let open=[];
+let current=null;
+let direct=false;
 
-// ================= LOAD =================
+/* ================= LOGIN ================= */
+window.check=()=>{
+if(document.getElementById("pw").value==="LJH1950"){
+document.getElementById("lock").style.display="none";
+load();
+}else{
+document.getElementById("err").style.display="block";
+}
+};
+
+/* ================= LOAD ================= */
 async function load(){
 
-artikelListe=[];
-offeneZahlungen=[];
+data=[];
+open=[];
 
 const a=await getDocs(collection(db,"artikel"));
-a.forEach(d=>artikelListe.push({id:d.id,...d.data()}));
+a.forEach(d=>data.push({id:d.id,...d.data()}));
 
 const o=await getDocs(collection(db,"offene"));
-o.forEach(d=>offeneZahlungen.push({id:d.id,...d.data()}));
+o.forEach(d=>open.push({id:d.id,...d.data()}));
 
 render();
-renderOffene();
+renderOpen();
 }
 
-// ================= ADD =================
-async function addArtikel(){
-
-const name=nameEl.value.trim();
-const kategorie=kategorieEl.value;
-const groesse=groesseEl.value.trim();
-const bestand=Number(bestandEl.value);
-
-if(!name||!groesse||isNaN(bestand)) return;
+/* ================= ADD ================= */
+document.getElementById("form").addEventListener("submit",async e=>{
+e.preventDefault();
 
 await addDoc(collection(db,"artikel"),{
-name,kategorie,groesse,bestand
+name:form.name.value,
+kat:form.kat.value,
+size:form.size.value,
+count:Number(form.count.value)
 });
 
-addForm.reset();
+form.reset();
 load();
-}
+});
 
-// ================= GROUP =================
+/* ================= GROUP ================= */
 function group(){
 
 const g={};
 
-artikelListe.forEach(a=>{
-const key=a.name+"___"+a.kategorie;
-if(!g[key])g[key]=[];
-g[key].push(a);
+data.forEach(a=>{
+const k=a.name+"___"+a.kat;
+if(!g[k])g[k]=[];
+g[k].push(a);
 });
 
 return g;
 }
 
-// ================= RENDER =================
+/* ================= RENDER ================= */
 function render(){
 
-const c=document.getElementById("gruppenContainer");
+const c=document.getElementById("list");
 c.innerHTML="";
 
 const groups=group();
 
-Object.keys(groups).forEach(key=>{
+Object.keys(groups).forEach(k=>{
 
-const[name,kat]=key.split("___");
+const[name,kat]=k.split("___");
 
 const box=document.createElement("div");
-box.className="gruppe";
+box.className="group";
 box.innerHTML=`${name} (${kat})`;
 
-const inner=document.createElement("div");
-inner.className="untergruppe";
-inner.style.display="block";
+groups[k].forEach(a=>{
 
-groups[key].forEach(a=>{
+const d=document.createElement("div");
+d.className="item";
 
-const div=document.createElement("div");
-
-div.innerHTML=`
-Größe <b>${a.groesse}</b> |
-Bestand <b>${a.bestand}</b>
-
+d.innerHTML=`
+Größe: <b>${a.size}</b> | Bestand: <b>${a.count}</b>
 <button onclick="plus('${a.id}')">+1</button>
 <button onclick="minus('${a.id}')">-1</button>
-<button onclick="del('${a.id}')">Löschen</button>
-<hr>
 `;
 
-inner.appendChild(div);
+box.appendChild(d);
 });
 
-box.appendChild(inner);
 c.appendChild(box);
 });
 }
 
-// ================= OFFENE =================
-function renderOffene(){
+/* ================= PLUS ================= */
+window.plus=async id=>{
 
-const c=document.getElementById("offeneListe");
+const a=data.find(x=>x.id===id);
+
+await updateDoc(doc(db,"artikel",id),{
+count:a.count+1
+});
+
+load();
+};
+
+/* ================= MINUS ================= */
+window.minus=id=>{
+current=id;
+direct=false;
+document.getElementById("payPopup").style.display="flex";
+document.getElementById("details").style.display="none";
+};
+
+/* ================= PAYMENT ================= */
+window.directPay=(yes)=>{
+direct=yes;
+if(yes){
+finishSale();
+}else{
+document.getElementById("details").style.display="block";
+}
+};
+
+window.saveDebt=async()=>{
+
+const a=data.find(x=>x.id===current);
+
+await addDoc(collection(db,"offene"),{
+name:buyer.value,
+betrag:amount.value,
+artikel:a.name,
+size:a.size
+});
+
+finishSale();
+};
+
+async function finishSale(){
+
+const a=data.find(x=>x.id===current);
+
+await updateDoc(doc(db,"artikel",current),{
+count:a.count-1
+});
+
+closePay();
+load();
+}
+
+/* ================= OPEN ================= */
+function renderOpen(){
+
+const c=document.getElementById("open");
 c.innerHTML="";
 
-offeneZahlungen.forEach(o=>{
+open.forEach(o=>{
 
-const div=document.createElement("div");
+const d=document.createElement("div");
+d.className="item";
 
-div.innerHTML=`
-<b>${o.name}</b> - ${o.artikel} (${o.groesse})<br>
-${o.betrag} €
+d.innerHTML=`
+<b>${o.name}</b> - ${o.artikel} (${o.size})<br>
+${o.betrag} €<br>
+<button class="secondary" onclick="markPaid('${o.id}')">Bezahlt</button>
 `;
 
-c.appendChild(div);
+c.appendChild(d);
 });
 }
 
-// ================= ACTIONS =================
-window.plus=async id=>{
+/* ================= MARK PAID (NEU) ================= */
+window.markPaid=async(id)=>{
 
-const a=artikelListe.find(x=>x.id===id);
-
-await updateDoc(doc(db,"artikel",id),{
-bestand:a.bestand+1
-});
+await deleteDoc(doc(db,"offene",id));
 
 load();
 };
 
-window.minus=async id=>{
-
-const a=artikelListe.find(x=>x.id===id);
-
-aktuelleID=id;
-
-document.getElementById("popup").style.display="flex";
-};
-
-popupSave.onclick=async()=>{
-
-const a=artikelListe.find(x=>x.id===aktuelleID);
-
-await updateDoc(doc(db,"artikel",aktuelleID),{
-bestand:a.bestand-1
-});
-
-await addDoc(collection(db,"offene"),{
-name:popupName.value,
-betrag:popupBetrag.value,
-artikel:a.name,
-groesse:a.groesse
-});
-
-popupName.value="";
-popupBetrag.value="";
-popup.style.display="none";
-
-load();
-};
-
-popupCancel.onclick=()=>popup.style.display="none";
-
-window.del=async id=>{
-
-await deleteDoc(doc(db,"artikel",id));
-load();
-};
-
-// ================= FORM =================
-const addForm=document.getElementById("addForm");
-const nameEl=document.getElementById("name");
-const kategorieEl=document.getElementById("kategorie");
-const groesseEl=document.getElementById("groesse");
-const bestandEl=document.getElementById("bestand");
-
-addForm.addEventListener("submit",e=>{
-e.preventDefault();
-addArtikel();
-});
-
-// ================= RESET =================
-resetAll.onclick=async()=>{
-
-const a=await getDocs(collection(db,"artikel"));
-a.forEach(d=>deleteDoc(doc(db,"artikel",d.id)));
-
-const o=await getDocs(collection(db,"offene"));
-o.forEach(d=>deleteDoc(doc(db,"offene",d.id)));
-
-load();
+window.closePay=()=>{
+document.getElementById("payPopup").style.display="none";
 };
 
 load();
