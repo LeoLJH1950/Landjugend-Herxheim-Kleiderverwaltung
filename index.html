@@ -5,29 +5,49 @@
 <title>Kleiderverwaltung LJH</title>
 
 <style>
-body {font-family: Arial; margin:0; background:#f5f5f5;}
-header {background:linear-gradient(90deg,#0077cc,#3cb043); color:white; padding:20px; text-align:center;}
+body{font-family:Arial;margin:0;background:#f5f5f5;}
+header{background:linear-gradient(90deg,#0077cc,#3cb043);color:white;padding:20px;text-align:center;}
 
-.container {max-width:900px; margin:20px auto; background:white; padding:20px; border-radius:10px;}
+.container{max-width:900px;margin:20px auto;background:white;padding:20px;border-radius:10px;}
 
-button {padding:6px 10px; border:none; cursor:pointer;}
-.primary {background:#0077cc; color:white;}
-.secondary {background:#3cb043; color:white;}
-.danger {background:#dc3545; color:white;}
+button{padding:6px 10px;border:none;cursor:pointer;border-radius:4px}
+.primary{background:#0077cc;color:white}
+.secondary{background:#3cb043;color:white}
+.danger{background:#dc3545;color:white}
 
-.card {background:#e9f5ff; padding:10px; margin-top:10px; border-radius:8px; cursor:pointer;}
-.item {background:white; border:1px solid #ddd; margin-top:5px; padding:6px;}
+.card{
+background:#e9f5ff;
+padding:10px;
+margin-top:10px;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+}
 
-#popup,#payPopup{
-position:fixed; top:0; left:0;
-width:100%; height:100%;
+.item{
+background:white;
+border:1px solid #ddd;
+margin-top:6px;
+padding:8px;
+border-radius:6px;
+}
+
+#lock,#pay{
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
 background:rgba(0,0,0,0.5);
-display:none;
+display:flex;
 justify-content:center;
 align-items:center;
 }
 
-.box {background:white; padding:20px; border-radius:8px; width:300px;}
+.box{
+background:white;
+padding:20px;
+border-radius:10px;
+width:300px;
+}
 </style>
 </head>
 
@@ -38,19 +58,19 @@ align-items:center;
 <div class="box">
 <h2>Passwort</h2>
 <input id="pw" type="password">
-<button onclick="check()">Enter</button>
-<p id="err" style="color:red; display:none;">Falsch</p>
+<button onclick="login()">Login</button>
+<p id="err" style="color:red;display:none;">Falsches Passwort</p>
 </div>
 </div>
 
 <header>
-<h1>Kleiderverwaltung</h1>
+<h1>Kleiderverwaltung LJH</h1>
 </header>
 
 <div class="container">
 
 <h2 id="title">Kategorien</h2>
-<div id="list"></div>
+<div id="view"></div>
 
 <h2>Offene Rechnungen</h2>
 <div id="open"></div>
@@ -58,15 +78,15 @@ align-items:center;
 </div>
 
 <!-- PAYMENT POPUP -->
-<div id="payPopup">
+<div id="pay" style="display:none">
 <div class="box">
 <h3>Verkauf erfassen</h3>
 
-<p>Bezahlt direkt?</p>
+<p>Direkt bezahlt?</p>
 <button onclick="directPay(true)">Ja</button>
 <button onclick="directPay(false)">Nein</button>
 
-<div id="details" style="display:none;">
+<div id="payForm" style="display:none">
 <input id="buyer" placeholder="Name">
 <input id="amount" placeholder="Betrag">
 <button onclick="saveDebt()">Speichern</button>
@@ -82,14 +102,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/fireba
 import {
 getFirestore,
 collection,
-addDoc,
 getDocs,
+addDoc,
 updateDoc,
 deleteDoc,
 doc
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-const firebaseConfig = {
+/* ================= FIREBASE ================= */
+const firebaseConfig={
 apiKey:"AIzaSyCD0Pz2LpOdFQ6-UrlNCuHQ5sqW87SgsDs",
 authDomain:"ljh-kleider.firebaseapp.com",
 projectId:"ljh-kleider",
@@ -101,21 +122,20 @@ appId:"1:76446271591:web:ecd096fa6c9afa570fecc2"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-let step=0;
-let currentCat="";
-let currentSub="";
+/* ================= STATE ================= */
 let data=[];
 let open=[];
+let step=0;
+let cat="";
+let sub="";
 let current=null;
 
 /* ================= LOGIN ================= */
-window.check=()=>{
+window.login=()=>{
 if(pw.value==="LJH1950"){
-document.getElementById("lock").style.display="none";
+lock.style.display="none";
 load();
-}else{
-err.style.display="block";
-}
+}else err.style.display="block";
 };
 
 /* ================= LOAD ================= */
@@ -134,67 +154,62 @@ render();
 renderOpen();
 }
 
-/* ================= RENDER NAV ================= */
+/* ================= NAVIGATION ================= */
 function render(){
 
-const c=document.getElementById("list");
-c.innerHTML="";
+const v=document.getElementById("view");
+v.innerHTML="";
 
-/* STEP 1: Kategorien */
+/* STEP 1 */
 if(step===0){
+title.innerText="Kategorien";
 
 const cats=[...new Set(data.map(x=>x.name))];
 
-cats.forEach(cat=>{
-const d=document.createElement("div");
+cats.forEach(x=>{
+let d=document.createElement("div");
 d.className="card";
-d.innerHTML=cat;
+d.innerText=x;
 
 d.onclick=()=>{
-currentCat=cat;
+cat=x;
 step=1;
 render();
 };
 
-c.appendChild(d);
+v.appendChild(d);
 });
 }
 
-/* STEP 2: Damen / Herren */
+/* STEP 2 */
 if(step===1){
+title.innerText=cat;
 
-document.getElementById("title").innerText=currentCat;
+const subs=[...new Set(data.filter(x=>x.name===cat).map(x=>x.kat))];
 
-const subs=[...new Set(
-data.filter(x=>x.name===currentCat).map(x=>x.kat)
-)];
-
-subs.forEach(sub=>{
-const d=document.createElement("div");
+subs.forEach(x=>{
+let d=document.createElement("div");
 d.className="card";
-d.innerHTML=sub;
+d.innerText=x;
 
 d.onclick=()=>{
-currentSub=sub;
+sub=x;
 step=2;
 render();
 };
 
-c.appendChild(d);
+v.appendChild(d);
 });
 }
 
-/* STEP 3: Größen */
+/* STEP 3 */
 if(step===2){
+title.innerText=cat+" → "+sub;
 
-document.getElementById("title").innerText=currentCat+" → "+currentSub;
+data.filter(x=>x.name===cat && x.kat===sub)
+.forEach(a=>{
 
-const items=data.filter(x=>
-x.name===currentCat && x.kat===currentSub
-);
-
-items.forEach(a=>{
-const d=document.createElement("div");
+let d=document.createElement("div");
 d.className="item";
 
 d.innerHTML=`
@@ -203,24 +218,14 @@ d.innerHTML=`
 <button onclick="minus('${a.id}')">-1</button>
 `;
 
-c.appendChild(d);
+v.appendChild(d);
 });
 }
 }
-
-/* ================= BACK (optional) ================= */
-document.addEventListener("keydown",e=>{
-if(e.key==="Backspace"){
-if(step>0){
-step--;
-render();
-}
-}
-});
 
 /* ================= PLUS ================= */
 window.plus=async id=>{
-const a=data.find(x=>x.id===id);
+let a=data.find(x=>x.id===id);
 await updateDoc(doc(db,"artikel",id),{count:a.count+1});
 load();
 };
@@ -228,8 +233,8 @@ load();
 /* ================= MINUS ================= */
 window.minus=id=>{
 current=id;
-document.getElementById("payPopup").style.display="flex";
-document.getElementById("details").style.display="none";
+pay.style.display="flex";
+payForm.style.display="none";
 };
 
 /* ================= PAYMENT ================= */
@@ -237,13 +242,13 @@ window.directPay=(yes)=>{
 if(yes){
 finish();
 }else{
-document.getElementById("details").style.display="block";
+payForm.style.display="block";
 }
 };
 
 window.saveDebt=async()=>{
 
-const a=data.find(x=>x.id===current);
+let a=data.find(x=>x.id===current);
 
 await addDoc(collection(db,"offene"),{
 name:buyer.value,
@@ -257,7 +262,7 @@ finish();
 
 async function finish(){
 
-const a=data.find(x=>x.id===current);
+let a=data.find(x=>x.id===current);
 
 await updateDoc(doc(db,"artikel",current),{
 count:a.count-1
@@ -275,15 +280,15 @@ c.innerHTML="";
 
 open.forEach(o=>{
 
-const d=document.createElement("div");
+let d=document.createElement("div");
 d.className="item";
 
 d.innerHTML=`
 <b>${o.name}</b> - ${o.artikel} (${o.size})<br>
-${o.betrag} €<br>
+${o.betrag} €
 
-<button class="secondary" onclick="markPaid('${o.id}')">Bezahlt</button>
-<button class="danger" onclick="deleteDebt('${o.id}')">Löschen</button>
+<button class="secondary" onclick="paid('${o.id}')">Bezahlt</button>
+<button class="danger" onclick="del('${o.id}')">Löschen</button>
 `;
 
 c.appendChild(d);
@@ -291,18 +296,18 @@ c.appendChild(d);
 }
 
 /* ================= DELETE ================= */
-window.markPaid=async(id)=>{
+window.paid=async id=>{
 await deleteDoc(doc(db,"offene",id));
 load();
 };
 
-window.deleteDebt=async(id)=>{
+window.del=async id=>{
 await deleteDoc(doc(db,"offene",id));
 load();
 };
 
 window.closePay=()=>{
-document.getElementById("payPopup").style.display="none";
+pay.style.display="none";
 };
 
 load();
