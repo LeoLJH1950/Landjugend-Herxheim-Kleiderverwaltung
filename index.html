@@ -259,8 +259,33 @@ let cat = "";
 let sub = "";
 let current = null;   // id des aktuell ausgewählten Artikels (für -1)
 
+/* ================= VORDEFINIERTE GRÖSSENREIHENFOLGE ================= */
+const SIZE_ORDER = ['XS','S','M','L','XL','2XL','3XL'];
+
 /* ================= HILFS-FUNKTIONEN ================= */
 const $ = id => document.getElementById(id);
+
+/* Hilfsfunktion: vergleicht zwei Größen nach gewünschter Reihenfolge.
+   Größen, die nicht in SIZE_ORDER sind, kommen danach alphabetisch. */
+function sizeCompare(aSize, bSize){
+  if (!aSize) aSize = "";
+  if (!bSize) bSize = "";
+  const A = String(aSize).toUpperCase().trim();
+  const B = String(bSize).toUpperCase().trim();
+
+  const iA = SIZE_ORDER.indexOf(A);
+  const iB = SIZE_ORDER.indexOf(B);
+
+  if (iA !== -1 && iB !== -1) return iA - iB;
+  if (iA !== -1) return -1; // A hat festen Platz, B nicht
+  if (iB !== -1) return 1;  // B hat festen Platz, A nicht
+
+  // Falls beide nicht in SIZE_ORDER: numerisch falls möglich, sonst lexicografisch
+  const nA = parseFloat(A.replace(/[^\d.,-]/g,'')); // extrahiere Zahl wenn vorhanden
+  const nB = parseFloat(B.replace(/[^\d.,-]/g,''));
+  if (!isNaN(nA) && !isNaN(nB)) return nA - nB;
+  return A.localeCompare(B, undefined, {numeric:true});
+}
 
 /* ================= LOGIN ================= */
 /* Nur mit korrektem Passwort wird die Seite freigeschaltet.
@@ -285,8 +310,6 @@ window.fillDemoForm = () => {
   $('newSize').value = "M";
   $('newCount').value = "3";
   // Hinweis für den Nutzer (kurz sichtbar)
-  const old = $('err').style.display;
-  $('err').style.display = "none";
   const info = document.createElement('div');
   info.style.color = "#666";
   info.style.marginTop = "8px";
@@ -422,56 +445,64 @@ function render(){
     return;
   }
 
-  // STEP 2: Größen / Items
+  // STEP 2: Größen / Items (mit definierter Reihenfolge)
   if (step === 2) {
     $('title').innerText = `${cat} → ${sub}`;
 
-    const list = data.filter(x => x.name === cat && x.kat === sub)
-                     .sort((a,b) => a.size.localeCompare(b.size, undefined, {numeric:true}));
+    // Gruppiere nach Größe und filtere nur vorhandene Größen
+    const list = data.filter(x => x.name === cat && x.kat === sub);
 
-    if (list.length === 0) {
+    // Erzeuge eindeutige Größenliste, sortiert nach SIZE_ORDER und dann alphabetisch/numerisch
+    const sizesSet = [...new Set(list.map(x => x.size))];
+    sizesSet.sort((a,b) => sizeCompare(a,b));
+
+    if (sizesSet.length === 0) {
       const p = document.createElement('p');
       p.style.color = "#666";
       p.innerText = "Keine Größen vorhanden.";
       v.appendChild(p);
     }
 
-    list.forEach(a => {
-      const d = document.createElement('div');
-      d.className = "item";
+    // Für jede Größe die passenden Artikel (normalerweise 1 Eintrag pro Größe)
+    sizesSet.forEach(sz => {
+      const entries = list.filter(x => String(x.size).toUpperCase().trim() === String(sz).toUpperCase().trim());
+      entries.forEach(a => {
+        const d = document.createElement('div');
+        d.className = "item";
 
-      const left = document.createElement('div');
-      left.innerHTML = `<strong>${a.size}</strong><div style="color:#666;font-size:0.9rem">${a.count} Stück</div>`;
+        const left = document.createElement('div');
+        left.innerHTML = `<strong>${a.size}</strong><div style="color:#666;font-size:0.9rem">${a.count} Stück</div>`;
 
-      const right = document.createElement('div');
-      right.style.display = "flex";
-      right.style.gap = "8px";
-      right.style.alignItems = "center";
+        const right = document.createElement('div');
+        right.style.display = "flex";
+        right.style.gap = "8px";
+        right.style.alignItems = "center";
 
-      const plusBtn = document.createElement('button');
-      plusBtn.className = "smallBtn secondary";
-      plusBtn.innerText = "+1";
-      plusBtn.onclick = (ev) => { ev.stopPropagation(); plus(a.id); };
+        const plusBtn = document.createElement('button');
+        plusBtn.className = "smallBtn secondary";
+        plusBtn.innerText = "+1";
+        plusBtn.onclick = (ev) => { ev.stopPropagation(); plus(a.id); };
 
-      const minusBtn = document.createElement('button');
-      minusBtn.className = "smallBtn danger";
-      minusBtn.innerText = "-1";
-      minusBtn.onclick = (ev) => { ev.stopPropagation(); minus(a.id); };
+        const minusBtn = document.createElement('button');
+        minusBtn.className = "smallBtn danger";
+        minusBtn.innerText = "-1";
+        minusBtn.onclick = (ev) => { ev.stopPropagation(); minus(a.id); };
 
-      const delBtn = document.createElement('button');
-      delBtn.className = "smallBtn";
-      delBtn.style.background = "#eee";
-      delBtn.innerText = "Löschen";
-      delBtn.onclick = (ev) => { ev.stopPropagation(); removeArticle(a.id); };
+        const delBtn = document.createElement('button');
+        delBtn.className = "smallBtn";
+        delBtn.style.background = "#eee";
+        delBtn.innerText = "Löschen";
+        delBtn.onclick = (ev) => { ev.stopPropagation(); removeArticle(a.id); };
 
-      right.appendChild(plusBtn);
-      right.appendChild(minusBtn);
-      right.appendChild(delBtn);
+        right.appendChild(plusBtn);
+        right.appendChild(minusBtn);
+        right.appendChild(delBtn);
 
-      d.appendChild(left);
-      d.appendChild(right);
+        d.appendChild(left);
+        d.appendChild(right);
 
-      v.appendChild(d);
+        v.appendChild(d);
+      });
     });
 
     // Navigation zurück
