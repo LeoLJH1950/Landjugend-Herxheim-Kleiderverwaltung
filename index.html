@@ -5,48 +5,89 @@
 <title>Kleiderverwaltung LJH</title>
 
 <style>
-body{font-family:Arial;margin:0;background:#f5f5f5;}
-header{background:linear-gradient(90deg,#0077cc,#3cb043);color:white;padding:20px;text-align:center;}
+body{
+    font-family:Arial;
+    margin:0;
+    background:#f5f5f5;
+}
 
-.container{max-width:900px;margin:20px auto;background:white;padding:20px;border-radius:10px;}
+/* HEADER */
+header{
+    background:linear-gradient(90deg,#0077cc,#3cb043);
+    color:white;
+    padding:20px;
+    text-align:center;
+}
 
-button{padding:6px 10px;border:none;cursor:pointer;border-radius:4px}
+/* CONTAINER */
+.container{
+    max-width:900px;
+    margin:20px auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+}
+
+/* BUTTONS */
+button{
+    padding:6px 10px;
+    border:none;
+    cursor:pointer;
+    border-radius:4px;
+}
 .primary{background:#0077cc;color:white}
 .secondary{background:#3cb043;color:white}
 .danger{background:#dc3545;color:white}
 
+/* KARTEN */
 .card{
-background:#e9f5ff;
-padding:10px;
-margin-top:10px;
-border-radius:8px;
-cursor:pointer;
-font-weight:bold;
+    background:#e9f5ff;
+    padding:12px;
+    margin-top:10px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
 }
 
+/* ITEMS */
 .item{
-background:white;
-border:1px solid #ddd;
-margin-top:6px;
-padding:8px;
-border-radius:6px;
+    background:white;
+    border:1px solid #ddd;
+    margin-top:6px;
+    padding:8px;
+    border-radius:6px;
 }
 
-#lock,#pay{
-position:fixed;
-top:0;left:0;
-width:100%;height:100%;
-background:rgba(0,0,0,0.5);
-display:flex;
-justify-content:center;
-align-items:center;
+/* LOGIN OVERLAY */
+#lock{
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,0.6);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
 }
 
 .box{
-background:white;
-padding:20px;
-border-radius:10px;
-width:300px;
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    width:300px;
+    text-align:center;
+}
+
+/* PAYMENT POPUP */
+#pay{
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,0.6);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:9998;
 }
 </style>
 </head>
@@ -55,12 +96,12 @@ width:300px;
 
 <!-- LOGIN -->
 <div id="lock">
-<div class="box">
-<h2>Passwort</h2>
-<input id="pw" type="password">
-<button onclick="login()">Login</button>
-<p id="err" style="color:red;display:none;">Falsches Passwort</p>
-</div>
+    <div class="box">
+        <h2>Passwort eingeben</h2>
+        <input id="pw" type="password" style="width:100%;padding:8px;">
+        <button class="primary" onclick="login()">Login</button>
+        <p id="err" style="color:red;display:none;">Falsches Passwort</p>
+    </div>
 </div>
 
 <header>
@@ -78,38 +119,39 @@ width:300px;
 </div>
 
 <!-- PAYMENT POPUP -->
-<div id="pay" style="display:none">
-<div class="box">
-<h3>Verkauf erfassen</h3>
+<div id="pay">
+    <div class="box">
+        <h3>Verkauf erfassen</h3>
 
-<p>Direkt bezahlt?</p>
-<button onclick="directPay(true)">Ja</button>
-<button onclick="directPay(false)">Nein</button>
+        <p>Direkt bezahlt?</p>
+        <button class="secondary" onclick="directPay(true)">Ja</button>
+        <button class="primary" onclick="directPay(false)">Nein</button>
 
-<div id="payForm" style="display:none">
-<input id="buyer" placeholder="Name">
-<input id="amount" placeholder="Betrag">
-<button onclick="saveDebt()">Speichern</button>
-</div>
+        <div id="payForm" style="display:none;margin-top:10px;">
+            <input id="buyer" placeholder="Name" style="width:100%;padding:8px;margin-bottom:8px;">
+            <input id="amount" placeholder="Betrag (€)" style="width:100%;padding:8px;margin-bottom:8px;">
+            <button class="primary" onclick="saveDebt()">Speichern</button>
+        </div>
 
-<button onclick="closePay()">Abbrechen</button>
-</div>
+        <button class="danger" onclick="closePay()" style="margin-top:10px;">Abbrechen</button>
+    </div>
 </div>
 
 <script type="module">
 
+/* ================= FIREBASE IMPORT ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
 import {
-getFirestore,
-collection,
-getDocs,
-addDoc,
-updateDoc,
-deleteDoc,
-doc
+    getFirestore,
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    doc
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-/* ================= FIREBASE ================= */
+/* ================= FIREBASE CONFIG ================= */
 const firebaseConfig={
 apiKey:"AIzaSyCD0Pz2LpOdFQ6-UrlNCuHQ5sqW87SgsDs",
 authDomain:"ljh-kleider.firebaseapp.com",
@@ -132,185 +174,185 @@ let current=null;
 
 /* ================= LOGIN ================= */
 window.login=()=>{
-if(pw.value==="LJH1950"){
-lock.style.display="none";
-load();
-}else err.style.display="block";
+    if(pw.value==="LJH1950"){
+        lock.style.display="none";
+        load();
+    } else {
+        err.style.display="block";
+    }
 };
 
-/* ================= LOAD ================= */
+/* ================= LOAD DATA ================= */
 async function load(){
 
-data=[];
-open=[];
+    data=[];
+    open=[];
 
-const a=await getDocs(collection(db,"artikel"));
-a.forEach(d=>data.push({id:d.id,...d.data()}));
+    const a=await getDocs(collection(db,"artikel"));
+    a.forEach(d=>data.push({id:d.id,...d.data()}));
 
-const o=await getDocs(collection(db,"offene"));
-o.forEach(d=>open.push({id:d.id,...d.data()}));
+    const o=await getDocs(collection(db,"offene"));
+    o.forEach(d=>open.push({id:d.id,...d.data()}));
 
-render();
-renderOpen();
+    render();
+    renderOpen();
 }
 
-/* ================= NAVIGATION ================= */
+/* ================= RENDER NAVIGATION ================= */
 function render(){
 
-const v=document.getElementById("view");
-v.innerHTML="";
+    const v=document.getElementById("view");
+    v.innerHTML="";
 
-/* STEP 1 */
-if(step===0){
-title.innerText="Kategorien";
+    /* STEP 0 → Artikelname */
+    if(step===0){
+        title.innerText="Artikel";
 
-const cats=[...new Set(data.map(x=>x.name))];
+        const names=[...new Set(data.map(x=>x.name))];
 
-cats.forEach(x=>{
-let d=document.createElement("div");
-d.className="card";
-d.innerText=x;
+        names.forEach(n=>{
+            let d=document.createElement("div");
+            d.className="card";
+            d.innerText=n;
 
-d.onclick=()=>{
-cat=x;
-step=1;
-render();
-};
+            d.onclick=()=>{
+                cat=n;
+                step=1;
+                render();
+            };
 
-v.appendChild(d);
-});
-}
+            v.appendChild(d);
+        });
+    }
 
-/* STEP 2 */
-if(step===1){
-title.innerText=cat;
+    /* STEP 1 → Kategorie */
+    if(step===1){
+        title.innerText=cat;
 
-const subs=[...new Set(data.filter(x=>x.name===cat).map(x=>x.kat))];
+        const cats=[...new Set(data.filter(x=>x.name===cat).map(x=>x.kat))];
 
-subs.forEach(x=>{
-let d=document.createElement("div");
-d.className="card";
-d.innerText=x;
+        cats.forEach(c=>{
+            let d=document.createElement("div");
+            d.className="card";
+            d.innerText=c;
 
-d.onclick=()=>{
-sub=x;
-step=2;
-render();
-};
+            d.onclick=()=>{
+                sub=c;
+                step=2;
+                render();
+            };
 
-v.appendChild(d);
-});
-}
+            v.appendChild(d);
+        });
+    }
 
-/* STEP 3 */
-if(step===2){
-title.innerText=cat+" → "+sub;
+    /* STEP 2 → Größen */
+    if(step===2){
+        title.innerText=cat+" → "+sub;
 
-data.filter(x=>x.name===cat && x.kat===sub)
-.forEach(a=>{
+        data.filter(x=>x.name===cat && x.kat===sub)
+        .forEach(a=>{
 
-let d=document.createElement("div");
-d.className="item";
+            let d=document.createElement("div");
+            d.className="item";
 
-d.innerHTML=`
-<b>${a.size}</b> | Bestand: ${a.count}
-<button onclick="plus('${a.id}')">+1</button>
-<button onclick="minus('${a.id}')">-1</button>
-`;
+            d.innerHTML=`
+                <b>${a.size}</b> | Bestand: ${a.count}
+                <button class="secondary" onclick="plus('${a.id}')">+1</button>
+                <button class="danger" onclick="minus('${a.id}')">-1</button>
+            `;
 
-v.appendChild(d);
-});
-}
+            v.appendChild(d);
+        });
+    }
 }
 
 /* ================= PLUS ================= */
 window.plus=async id=>{
-let a=data.find(x=>x.id===id);
-await updateDoc(doc(db,"artikel",id),{count:a.count+1});
-load();
+    let a=data.find(x=>x.id===id);
+    await updateDoc(doc(db,"artikel",id),{count:a.count+1});
+    load();
 };
 
 /* ================= MINUS ================= */
 window.minus=id=>{
-current=id;
-pay.style.display="flex";
-payForm.style.display="none";
+    current=id;
+    pay.style.display="flex";
+    payForm.style.display="none";
 };
 
 /* ================= PAYMENT ================= */
 window.directPay=(yes)=>{
-if(yes){
-finish();
-}else{
-payForm.style.display="block";
-}
+    if(yes){
+        finish();
+    } else {
+        payForm.style.display="block";
+    }
 };
 
 window.saveDebt=async()=>{
 
-let a=data.find(x=>x.id===current);
+    let a=data.find(x=>x.id===current);
 
-await addDoc(collection(db,"offene"),{
-name:buyer.value,
-betrag:amount.value,
-artikel:a.name,
-size:a.size
-});
+    await addDoc(collection(db,"offene"),{
+        name:buyer.value,
+        betrag:amount.value,
+        artikel:a.name,
+        size:a.size
+    });
 
-finish();
+    finish();
 };
 
 async function finish(){
 
-let a=data.find(x=>x.id===current);
+    let a=data.find(x=>x.id===current);
 
-await updateDoc(doc(db,"artikel",current),{
-count:a.count-1
-});
+    await updateDoc(doc(db,"artikel",current),{
+        count:a.count-1
+    });
 
-closePay();
-load();
+    closePay();
+    load();
 }
 
-/* ================= OPEN ================= */
+/* ================= OFFENE RECHNUNGEN ================= */
 function renderOpen(){
 
-const c=document.getElementById("open");
-c.innerHTML="";
+    const c=document.getElementById("open");
+    c.innerHTML="";
 
-open.forEach(o=>{
+    open.forEach(o=>{
 
-let d=document.createElement("div");
-d.className="item";
+        let d=document.createElement("div");
+        d.className="item";
 
-d.innerHTML=`
-<b>${o.name}</b> - ${o.artikel} (${o.size})<br>
-${o.betrag} €
+        d.innerHTML=`
+            <b>${o.name}</b> – ${o.artikel} (${o.size})<br>
+            ${o.betrag} €
+            <br>
+            <button class="secondary" onclick="paid('${o.id}')">Bezahlt</button>
+            <button class="danger" onclick="del('${o.id}')">Löschen</button>
+        `;
 
-<button class="secondary" onclick="paid('${o.id}')">Bezahlt</button>
-<button class="danger" onclick="del('${o.id}')">Löschen</button>
-`;
-
-c.appendChild(d);
-});
+        c.appendChild(d);
+    });
 }
 
 /* ================= DELETE ================= */
 window.paid=async id=>{
-await deleteDoc(doc(db,"offene",id));
-load();
+    await deleteDoc(doc(db,"offene",id));
+    load();
 };
 
 window.del=async id=>{
-await deleteDoc(doc(db,"offene",id));
-load();
+    await deleteDoc(doc(db,"offene",id));
+    load();
 };
 
 window.closePay=()=>{
-pay.style.display="none";
+    pay.style.display="none";
 };
-
-load();
 
 </script>
 
