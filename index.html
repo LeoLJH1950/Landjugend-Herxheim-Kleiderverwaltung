@@ -10,15 +10,12 @@ header {background:linear-gradient(90deg,#0077cc,#3cb043); color:white; padding:
 
 .container {max-width:900px; margin:20px auto; background:white; padding:20px; border-radius:10px;}
 
-form {display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
-input,select {padding:6px;}
-
 button {padding:6px 10px; border:none; cursor:pointer;}
 .primary {background:#0077cc; color:white;}
 .secondary {background:#3cb043; color:white;}
 .danger {background:#dc3545; color:white;}
 
-.group {background:#e9f5ff; margin-top:10px; padding:10px; border-radius:6px;}
+.card {background:#e9f5ff; padding:10px; margin-top:10px; border-radius:8px; cursor:pointer;}
 .item {background:white; border:1px solid #ddd; margin-top:5px; padding:6px;}
 
 #popup,#payPopup{
@@ -36,7 +33,7 @@ align-items:center;
 
 <body>
 
-<!-- PASSWORT -->
+<!-- LOGIN -->
 <div id="lock">
 <div class="box">
 <h2>Passwort</h2>
@@ -52,20 +49,7 @@ align-items:center;
 
 <div class="container">
 
-<h2>Artikel hinzufügen</h2>
-
-<form id="form">
-<input id="name" placeholder="Artikel (z.B. Hose)">
-<select id="kat">
-<option>Damen</option>
-<option>Herren</option>
-</select>
-<input id="size" placeholder="Größe (S/M/L)">
-<input id="count" type="number" placeholder="Bestand">
-<button class="primary">Hinzufügen</button>
-</form>
-
-<h2>Bestand</h2>
+<h2 id="title">Kategorien</h2>
 <div id="list"></div>
 
 <h2>Offene Rechnungen</h2>
@@ -73,7 +57,7 @@ align-items:center;
 
 </div>
 
-<!-- POPUP -->
+<!-- PAYMENT POPUP -->
 <div id="payPopup">
 <div class="box">
 <h3>Verkauf erfassen</h3>
@@ -117,17 +101,20 @@ appId:"1:76446271591:web:ecd096fa6c9afa570fecc2"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
+let step=0;
+let currentCat="";
+let currentSub="";
 let data=[];
 let open=[];
 let current=null;
 
 /* ================= LOGIN ================= */
 window.check=()=>{
-if(document.getElementById("pw").value==="LJH1950"){
+if(pw.value==="LJH1950"){
 document.getElementById("lock").style.display="none";
 load();
 }else{
-document.getElementById("err").style.display="block";
+err.style.display="block";
 }
 };
 
@@ -147,78 +134,94 @@ render();
 renderOpen();
 }
 
-/* ================= ADD ================= */
-document.getElementById("form").addEventListener("submit",async e=>{
-e.preventDefault();
-
-await addDoc(collection(db,"artikel"),{
-name:form.name.value,
-kat:form.kat.value,
-size:form.size.value,
-count:Number(form.count.value)
-});
-
-form.reset();
-load();
-});
-
-/* ================= GROUP ================= */
-function group(){
-
-const g={};
-
-data.forEach(a=>{
-const k=a.name+"___"+a.kat;
-if(!g[k])g[k]=[];
-g[k].push(a);
-});
-
-return g;
-}
-
-/* ================= RENDER ================= */
+/* ================= RENDER NAV ================= */
 function render(){
 
 const c=document.getElementById("list");
 c.innerHTML="";
 
-const groups=group();
+/* STEP 1: Kategorien */
+if(step===0){
 
-Object.keys(groups).forEach(k=>{
+const cats=[...new Set(data.map(x=>x.name))];
 
-const[name,kat]=k.split("___");
+cats.forEach(cat=>{
+const d=document.createElement("div");
+d.className="card";
+d.innerHTML=cat;
 
-const box=document.createElement("div");
-box.className="group";
-box.innerHTML=`${name} (${kat})`;
+d.onclick=()=>{
+currentCat=cat;
+step=1;
+render();
+};
 
-groups[k].forEach(a=>{
+c.appendChild(d);
+});
+}
 
+/* STEP 2: Damen / Herren */
+if(step===1){
+
+document.getElementById("title").innerText=currentCat;
+
+const subs=[...new Set(
+data.filter(x=>x.name===currentCat).map(x=>x.kat)
+)];
+
+subs.forEach(sub=>{
+const d=document.createElement("div");
+d.className="card";
+d.innerHTML=sub;
+
+d.onclick=()=>{
+currentSub=sub;
+step=2;
+render();
+};
+
+c.appendChild(d);
+});
+}
+
+/* STEP 3: Größen */
+if(step===2){
+
+document.getElementById("title").innerText=currentCat+" → "+currentSub;
+
+const items=data.filter(x=>
+x.name===currentCat && x.kat===currentSub
+);
+
+items.forEach(a=>{
 const d=document.createElement("div");
 d.className="item";
 
 d.innerHTML=`
-Größe: <b>${a.size}</b> | Bestand: <b>${a.count}</b>
+<b>${a.size}</b> | Bestand: ${a.count}
 <button onclick="plus('${a.id}')">+1</button>
 <button onclick="minus('${a.id}')">-1</button>
 `;
 
-box.appendChild(d);
-});
-
-c.appendChild(box);
+c.appendChild(d);
 });
 }
+}
+
+/* ================= BACK (optional) ================= */
+document.addEventListener("keydown",e=>{
+if(e.key==="Backspace"){
+if(step>0){
+step--;
+render();
+}
+}
+});
 
 /* ================= PLUS ================= */
 window.plus=async id=>{
-
 const a=data.find(x=>x.id===id);
-
-await updateDoc(doc(db,"artikel",id),{
-count:a.count+1
-});
-
+await updateDoc(doc(db,"artikel",id),{count:a.count+1});
 load();
 };
 
@@ -232,7 +235,7 @@ document.getElementById("details").style.display="none";
 /* ================= PAYMENT ================= */
 window.directPay=(yes)=>{
 if(yes){
-finishSale();
+finish();
 }else{
 document.getElementById("details").style.display="block";
 }
@@ -249,10 +252,10 @@ artikel:a.name,
 size:a.size
 });
 
-finishSale();
+finish();
 };
 
-async function finishSale(){
+async function finish(){
 
 const a=data.find(x=>x.id===current);
 
@@ -279,20 +282,15 @@ d.innerHTML=`
 <b>${o.name}</b> - ${o.artikel} (${o.size})<br>
 ${o.betrag} €<br>
 
-<button class="secondary" onclick="markPaid('${o.id}')">
-Bezahlt
-</button>
-
-<button class="danger" onclick="deleteDebt('${o.id}')">
-Löschen
-</button>
+<button class="secondary" onclick="markPaid('${o.id}')">Bezahlt</button>
+<button class="danger" onclick="deleteDebt('${o.id}')">Löschen</button>
 `;
 
 c.appendChild(d);
 });
 }
 
-/* ================= DELETE / PAID ================= */
+/* ================= DELETE ================= */
 window.markPaid=async(id)=>{
 await deleteDoc(doc(db,"offene",id));
 load();
