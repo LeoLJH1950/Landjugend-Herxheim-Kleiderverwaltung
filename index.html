@@ -3,11 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Kleiderverwaltung LJH</title>
-
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <style>
-/* Grundlayout */
 :root{
   --blau:#0077cc;
   --gruen:#3cb043;
@@ -52,7 +49,7 @@ button{
 .secondary{background:var(--gruen);color:white}
 .danger{background:var(--rot);color:white}
 
-/* Karten / Listen */
+/* Cards / Lists */
 .card{
   background:#e9f5ff;
   padding:12px;
@@ -151,7 +148,7 @@ button{
 <div id="lock" aria-hidden="false">
   <div class="lockBox" role="dialog" aria-modal="true" aria-label="Passwort">
     <h2>Passwort eingeben</h2>
-    <input id="pw" type="password" placeholder="Passwort">
+    <input id="pw" type="password" placeholder="Passwort" aria-label="Passwort">
     <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">
       <button class="primary" onclick="login()">Anmelden</button>
       <button onclick="fillDemo()">Demo</button>
@@ -178,7 +175,7 @@ button{
     <input id="newSize" placeholder="Größe (z.B. M)" aria-label="Größe">
     <input id="newCount" type="number" min="0" value="1" placeholder="Stückzahl" aria-label="Stückzahl">
   </div>
-  <div style="display:flex;gap:8px;">
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
     <button class="primary" onclick="addArticle()">Hinzufügen</button>
     <button onclick="resetAdd()">Zurücksetzen</button>
   </div>
@@ -212,8 +209,8 @@ button{
     </div>
 
     <div id="payForm" style="display:none;margin-top:10px;">
-      <input id="buyer" placeholder="Name des Käufers">
-      <input id="amount" placeholder="Betrag (€)" inputmode="decimal">
+      <input id="buyer" placeholder="Name des Käufers" aria-label="Name des Käufers">
+      <input id="amount" placeholder="Betrag (€)" inputmode="decimal" aria-label="Betrag">
       <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
         <button class="primary" onclick="saveDebt()">Speichern</button>
         <button onclick="cancelPay()">Abbrechen</button>
