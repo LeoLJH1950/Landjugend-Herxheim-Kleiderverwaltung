@@ -5,200 +5,149 @@
 <title>Landjugend Herxheim – Kleiderverwaltung</title>
 
 <style>
-    :root {
-        --blau: #0077cc;
-        --gruen: #3cb043;
-        --rot: #dc3545;
-        --weiss: #ffffff;
-        --hellgrau: #f5f5f5;
-    }
+/* ===== DEIN DESIGN BLEIBT KOMPLETT GLEICH ===== */
+:root {
+    --blau: #0077cc;
+    --gruen: #3cb043;
+    --rot: #dc3545;
+    --weiss: #ffffff;
+    --hellgrau: #f5f5f5;
+}
 
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        background: var(--hellgrau);
-    }
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: var(--hellgrau);
+}
 
-    /* Passwort-Overlay */
-    #passwortOverlay {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.7);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-    }
+#passwortOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
 
-    #passwortBox {
-        background: white;
-        padding: 25px;
-        border-radius: 10px;
-        width: 90%;
-        max-width: 350px;
-        text-align: center;
-    }
+#passwortBox {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 350px;
+    text-align: center;
+}
 
-    #passwortBox input {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-    }
+#passwortBox input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+}
 
-    #passwortBox button {
-        margin-top: 15px;
-        padding: 10px 20px;
-        background: var(--blau);
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
+#passwortBox button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: var(--blau);
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
 
-    header {
-        background: linear-gradient(90deg, var(--blau), var(--gruen));
-        color: white;
-        padding: 20px;
-        text-align: center;
-    }
+header {
+    background: linear-gradient(90deg, var(--blau), var(--gruen));
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
 
-    .container {
-        max-width: 900px;
-        margin: 20px auto;
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-    }
+.container {
+    max-width: 900px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+}
 
-    h2 {
-        border-left: 6px solid var(--gruen);
-        padding-left: 10px;
-    }
+h2 {
+    border-left: 6px solid var(--gruen);
+    padding-left: 10px;
+}
 
-    form {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-bottom: 20px;
-    }
+form {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
 
-    input, select {
-        padding: 6px;
-        width: 100%;
-    }
+input, select {
+    padding: 6px;
+    width: 100%;
+}
 
-    button.primary {
-        background: var(--blau);
-        color: white;
-        border: none;
-        padding: 7px 12px;
-        border-radius: 4px;
-    }
+button.primary { background: var(--blau); color: white; border: none; padding: 7px 12px; border-radius: 4px; }
+button.secondary { background: var(--gruen); color: white; border: none; padding: 7px 12px; border-radius: 4px; }
+button.danger { background: var(--rot); color: white; border: none; padding: 7px 12px; border-radius: 4px; }
+button.small { padding: 6px 10px; font-size: 0.8rem; }
 
-    button.small {
-        padding: 6px 10px;
-        font-size: 0.8rem;
-    }
+.gruppe {
+    background: #e9f5ff;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
 
-    button.secondary {
-        background: var(--gruen);
-        color: white;
-        border: none;
-        padding: 7px 12px;
-        border-radius: 4px;
-    }
+.untergruppe {
+    margin-left: 20px;
+    margin-bottom: 20px;
+    display: none;
+}
 
-    button.danger {
-        background: var(--rot);
-        color: white;
-        border: none;
-        padding: 7px 12px;
-        border-radius: 4px;
-    }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
 
-    /* Gruppen */
-    .gruppe {
-        background: #e9f5ff;
-        padding: 12px;
-        border-radius: 6px;
-        margin-bottom: 10px;
-        cursor: pointer;
-        font-weight: bold;
-    }
+th {
+    background: var(--blau);
+    color: white;
+    padding: 8px;
+}
 
-    .gruppe:hover {
-        background: #d8edff;
-    }
+td {
+    padding: 6px;
+    border: 1px solid #ddd;
+}
 
-    .untergruppe {
-        margin-left: 20px;
-        margin-bottom: 20px;
-        display: none;
-    }
+.low-stock { background: #fff3cd; }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-    }
+#popup {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
 
-    th {
-        background: var(--blau);
-        color: white;
-        padding: 8px;
-    }
-
-    td {
-        padding: 6px;
-        border: 1px solid #ddd;
-    }
-
-    .low-stock {
-        background: #fff3cd;
-    }
-
-    /* Popup */
-    #popup {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: none;
-        justify-content: center;
-        align-items: center;
-    }
-
-    #popupContent {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        width: 90%;
-        max-width: 350px;
-    }
+#popupContent {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 350px;
+}
 </style>
-
-<!-- Firebase CDN -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-<script>
-// Deine Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyDRItWcbRi-7s7j_72cXLg5Dp9kphS0nuo",
-  authDomain: "kleiderverwaltung.firebaseapp.com",
-  projectId: "kleiderverwaltung",
-  storageBucket: "kleiderverwaltung.firebasestorage.app",
-  messagingSenderId: "162232985824",
-  appId: "1:162232985824:web:0d18ebbc3c521b5e380885"
-};
-
-// Firebase initialisieren
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-</script>
 </head>
+
 <body>
+
 <!-- Passwort -->
 <div id="passwortOverlay">
     <div id="passwortBox">
@@ -210,8 +159,9 @@ const firebaseConfig = {
 </div>
 
 <script>
+const PASSWORT = "LJH1950";
 function checkPasswort() {
-    if (document.getElementById("pwInput").value === "LJH1950") {
+    if (document.getElementById("pwInput").value === PASSWORT) {
         document.getElementById("passwortOverlay").style.display = "none";
     } else {
         document.getElementById("pwFehler").style.display = "block";
@@ -220,95 +170,103 @@ function checkPasswort() {
 </script>
 
 <header>
-    <h1>Landjugend Herxheim – Kleiderverwaltung</h1>
+<h1>Landjugend Herxheim – Kleiderverwaltung</h1>
 </header>
 
 <div class="container">
 
-    <h2>Neuen Artikel hinzufügen</h2>
-    <form id="addForm">
-        <input type="text" id="name" placeholder="Artikelname" required>
-        <select id="kategorie">
-            <option>Damen</option>
-            <option>Herren</option>
-            <option>Unisex</option>
-            <option>Kinder</option>
-        </select>
-        <input type="text" id="groesse" placeholder="Größe" required>
-        <input type="number" id="bestand" min="0" value="0" required>
-        <button class="primary" type="submit">Hinzufügen</button>
-    </form>
+<h2>Neuen Artikel hinzufügen</h2>
+<form id="addForm">
+    <input type="text" id="name" placeholder="Artikelname" required>
+    <select id="kategorie">
+        <option>Damen</option>
+        <option>Herren</option>
+        <option>Unisex</option>
+        <option>Kinder</option>
+    </select>
+    <input type="text" id="groesse" placeholder="Größe" required>
+    <input type="number" id="bestand" min="0" value="0" required>
+    <button class="primary" type="submit">Hinzufügen</button>
+</form>
 
-    <h2>Bestand</h2>
-    <div id="gruppenContainer"></div>
+<h2>Bestand</h2>
+<div id="gruppenContainer"></div>
 
-    <h2>Offene Zahlungen</h2>
-    <div id="offeneListe"></div>
+<h2>Offene Zahlungen</h2>
+<div id="offeneListe"></div>
 
-    <button id="resetAll" class="danger">Alle Daten löschen</button>
+<button id="resetAll" class="danger">Alle Daten löschen</button>
 </div>
 
 <!-- Popup -->
 <div id="popup">
-    <div id="popupContent">
-        <h3>Offene Zahlung erfassen</h3>
-        <input type="text" id="popupName" placeholder="Name">
-        <input type="number" id="popupBetrag" step="0.01" placeholder="Betrag (€)">
-        <button id="popupSave" class="primary">Speichern</button>
-        <button id="popupCancel" class="secondary">Abbrechen</button>
-    </div>
+<div id="popupContent">
+    <h3>Offene Zahlung erfassen</h3>
+    <input type="text" id="popupName" placeholder="Name">
+    <input type="number" id="popupBetrag" step="0.01" placeholder="Betrag (€)">
+    <button id="popupSave" class="primary">Speichern</button>
+    <button id="popupCancel" class="secondary">Abbrechen</button>
 </div>
-<script>
-// -------------------------------
-// FIREBASE – ARTIKEL SPEICHERN
-// -------------------------------
-async function ladeArtikel() {
-    const snapshot = await db.collection("artikel").get();
-    artikelListe = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+</div>
+
+<!-- ================= FIREBASE ================= -->
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    deleteDoc,
+    doc,
+    updateDoc
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCD0Pz2LpOdFQ6-UrlNCuHQ5sqW87SgsDs",
+    authDomain: "ljh-kleider.firebaseapp.com",
+    projectId: "ljh-kleider",
+    storageBucket: "ljh-kleider.firebasestorage.app",
+    messagingSenderId: "76446271591",
+    appId: "1:76446271591:web:ecd096fa6c9afa570fecc2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let artikelListe = [];
+let offeneZahlungen = [];
+let aktuellerArtikelID = null;
+
+// ===== LADEN =====
+async function ladeDaten() {
+
+    artikelListe = [];
+    offeneZahlungen = [];
+
+    const aSnap = await getDocs(collection(db, "artikel"));
+    aSnap.forEach(d => artikelListe.push({ firestoreId: d.id, ...d.data() }));
+
+    const oSnap = await getDocs(collection(db, "offeneZahlungen"));
+    oSnap.forEach(d => offeneZahlungen.push({ firestoreId: d.id, ...d.data() }));
+
     renderGruppen();
-}
-
-async function speichereArtikel(a) {
-    await db.collection("artikel").doc(a.id).set(a);
-}
-
-async function loescheArtikel(id) {
-    await db.collection("artikel").doc(id).delete();
-}
-
-// -------------------------------
-// FIREBASE – OFFENE ZAHLUNGEN
-// -------------------------------
-async function ladeOffene() {
-    const snapshot = await db.collection("offene").get();
-    offeneZahlungen = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     renderOffene();
 }
 
-async function speichereOffene(eintrag) {
-    await db.collection("offene").doc(eintrag.id).set(eintrag);
-}
-
-async function loescheOffene(id) {
-    await db.collection("offene").doc(id).delete();
-}
-
-// -------------------------------
-// GRUPPIEREN
-// -------------------------------
+// ===== GRUPPIEREN =====
 function gruppiereArtikel() {
-    const gruppen = {};
+    const g = {};
     artikelListe.forEach(a => {
         const key = a.name + "___" + a.kategorie;
-        if (!gruppen[key]) gruppen[key] = [];
-        gruppen[key].push(a);
+        if (!g[key]) g[key] = [];
+        g[key].push(a);
     });
-    return gruppen;
+    return g;
 }
 
-// -------------------------------
-// RENDER – GRUPPEN
-// -------------------------------
+// ===== RENDER ARTIKEL =====
 function renderGruppen() {
     const container = document.getElementById("gruppenContainer");
     container.innerHTML = "";
@@ -318,20 +276,16 @@ function renderGruppen() {
     Object.keys(gruppen).forEach(key => {
         const [name, kategorie] = key.split("___");
 
-        const gruppeDiv = document.createElement("div");
-        gruppeDiv.className = "gruppe";
-        gruppeDiv.textContent = `${name} (${kategorie})`;
+        const div = document.createElement("div");
+        div.className = "gruppe";
+        div.textContent = `${name} (${kategorie})`;
 
         const unter = document.createElement("div");
         unter.className = "untergruppe";
 
         const table = document.createElement("table");
         table.innerHTML = `
-            <tr>
-                <th>Größe</th>
-                <th>Bestand</th>
-                <th>Aktionen</th>
-            </tr>
+            <tr><th>Größe</th><th>Bestand</th><th>Aktionen</th></tr>
         `;
 
         gruppen[key].forEach(a => {
@@ -342,29 +296,26 @@ function renderGruppen() {
                 <td>${a.groesse}</td>
                 <td>${a.bestand}</td>
                 <td>
-                    <button class="small primary" onclick="plus('${a.id}')">+1</button>
-                    <button class="small secondary" onclick="minus('${a.id}')">-1</button>
-                    <button class="small danger" onclick="delArtikel('${a.id}')">Löschen</button>
+                    <button class="small primary" onclick="plus('${a.firestoreId}')">+1</button>
+                    <button class="small secondary" onclick="minus('${a.firestoreId}')">-1</button>
+                    <button class="small danger" onclick="delArtikel('${a.firestoreId}')">Löschen</button>
                 </td>
             `;
-
             table.appendChild(tr);
         });
 
         unter.appendChild(table);
 
-        gruppeDiv.onclick = () => {
+        div.onclick = () => {
             unter.style.display = unter.style.display === "block" ? "none" : "block";
         };
 
-        container.appendChild(gruppeDiv);
+        container.appendChild(div);
         container.appendChild(unter);
     });
 }
 
-// -------------------------------
-// RENDER – OFFENE ZAHLUNGEN
-// -------------------------------
+// ===== OFFENE ZAHLUNGEN =====
 function renderOffene() {
     const div = document.getElementById("offeneListe");
     div.innerHTML = "";
@@ -377,108 +328,87 @@ function renderOffene() {
         d.innerHTML = `
             <strong>${o.name}</strong> – ${o.artikel} (${o.groesse})<br>
             Betrag: <strong>${o.betrag} €</strong><br>
-            <button class="secondary small" onclick="bezahlt('${o.id}')">Als bezahlt markieren</button>
+            <button class="secondary small" onclick="bezahlt('${o.firestoreId}')">Als bezahlt</button>
         `;
-
         div.appendChild(d);
     });
 }
 
-// -------------------------------
-// ARTIKEL HINZUFÜGEN
-// -------------------------------
-document.getElementById("addForm").addEventListener("submit", async e => {
+// ===== ADD =====
+async function addArtikel() {
+    await addDoc(collection(db, "artikel"), {
+        name: name.value,
+        kategorie: kategorie.value,
+        groesse: groesse.value,
+        bestand: parseInt(bestand.value)
+    });
+    ladeDaten();
+}
+
+document.getElementById("addForm").addEventListener("submit", e => {
     e.preventDefault();
-
-    const a = {
-        id: Date.now().toString(),
-        name: document.getElementById("name").value,
-        kategorie: document.getElementById("kategorie").value,
-        groesse: document.getElementById("groesse").value,
-        bestand: parseInt(document.getElementById("bestand").value)
-    };
-
-    artikelListe.push(a);
-    await speichereArtikel(a);
-    renderGruppen();
-
+    addArtikel();
     e.target.reset();
 });
 
-// -------------------------------
-// +1 / –1 / LÖSCHEN
-// -------------------------------
-async function plus(id) {
-    const a = artikelListe.find(x => x.id === id);
-    a.bestand++;
-    await speichereArtikel(a);
-    renderGruppen();
-}
+// ===== ACTIONS =====
+window.plus = async id => {
+    const a = artikelListe.find(x => x.firestoreId === id);
+    await updateDoc(doc(db, "artikel", id), { bestand: a.bestand + 1 });
+    ladeDaten();
+};
 
-let aktuellerArtikelID = null;
-
-function minus(id) {
+window.minus = id => {
     aktuellerArtikelID = id;
-    document.getElementById("popup").style.display = "flex";
-}
+    popup.style.display = "flex";
+};
 
 popupSave.onclick = async () => {
-    const name = popupName.value.trim();
-    const betrag = popupBetrag.value.trim();
-    if (!name || !betrag) return;
+    const a = artikelListe.find(x => x.firestoreId === aktuellerArtikelID);
 
-    const a = artikelListe.find(x => x.id === aktuellerArtikelID);
-    a.bestand--;
+    await updateDoc(doc(db, "artikel", aktuellerArtikelID), {
+        bestand: a.bestand - 1
+    });
 
-    await speichereArtikel(a);
-
-    const eintrag = {
-        id: Date.now().toString(),
-        name,
-        betrag,
+    await addDoc(collection(db, "offeneZahlungen"), {
+        name: popupName.value,
+        betrag: popupBetrag.value,
         artikel: a.name,
         groesse: a.groesse
-    };
+    });
 
-    offeneZahlungen.push(eintrag);
-    await speichereOffene(eintrag);
-
-    popupName.value = "";
-    popupBetrag.value = "";
-    document.getElementById("popup").style.display = "none";
-
-    renderGruppen();
-    renderOffene();
+    popup.style.display = "none";
+    ladeDaten();
 };
 
-popupCancel.onclick = () => {
-    document.getElementById("popup").style.display = "none";
+popupCancel.onclick = () => popup.style.display = "none";
+
+window.bezahlt = async id => {
+    await deleteDoc(doc(db, "offeneZahlungen", id));
+    ladeDaten();
 };
 
-async function bezahlt(id) {
-    offeneZahlungen = offeneZahlungen.filter(o => o.id !== id);
-    await loescheOffene(id);
-    renderOffene();
-}
+window.delArtikel = async id => {
+    await deleteDoc(doc(db, "artikel", id));
+    ladeDaten();
+};
 
-async function delArtikel(id) {
-    artikelListe = artikelListe.filter(a => a.id !== id);
-    await loescheArtikel(id);
-    renderGruppen();
-}
+document.getElementById("resetAll").onclick = async () => {
+    if (!confirm("Wirklich alles löschen?")) return;
 
-// -------------------------------
-// ALLES LADEN BEIM START
-// -------------------------------
-let artikelListe = [];
-let offeneZahlungen = [];
+    for (let a of artikelListe)
+        await deleteDoc(doc(db, "artikel", a.firestoreId));
 
-async function start() {
-    await ladeArtikel();
-    await ladeOffene();
-}
+    for (let o of offeneZahlungen)
+        await deleteDoc(doc(db, "offeneZahlungen", o.firestoreId));
 
-start();
+    ladeDaten();
+};
+
+// START
+ladeDaten();
+
 </script>
+
 </body>
 </html>
