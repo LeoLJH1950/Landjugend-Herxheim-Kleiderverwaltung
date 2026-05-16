@@ -44,7 +44,7 @@ input,select {
 }
 
 button {
-    padding:7px 12px;
+    padding:6px 10px;
     border:none;
     cursor:pointer;
 }
@@ -53,51 +53,21 @@ button {
 .secondary { background:var(--gruen); color:white; }
 .danger { background:var(--rot); color:white; }
 
-.gruppe {
+.group {
     background:#e9f5ff;
-    padding:10px;
     margin-top:10px;
+    padding:10px;
+    border-radius:6px;
     font-weight:bold;
 }
 
-.unter {
+.item {
     margin-left:15px;
-    display:none;
-}
-
-table {
-    width:100%;
-    margin-top:10px;
-    border-collapse:collapse;
-}
-
-th {
-    background:var(--blau);
-    color:white;
-}
-
-td {
-    border:1px solid #ddd;
-    padding:6px;
-}
-
-.low {
-    background:#fff3cd;
-}
-
-#popup {
-    position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.5);
-    display:none;
-    justify-content:center;
-    align-items:center;
-}
-
-#popupBox {
+    margin-top:5px;
+    padding:5px;
     background:white;
-    padding:20px;
+    border:1px solid #ddd;
+    border-radius:5px;
 }
 </style>
 </head>
@@ -120,29 +90,14 @@ td {
         <option>Unisex</option>
         <option>Kinder</option>
     </select>
-    <input id="groesse" placeholder="Größe">
+    <input id="groesse" placeholder="Größe (S/M/L)">
     <input id="bestand" type="number" placeholder="Bestand">
     <button class="primary">Hinzufügen</button>
 </form>
 
 <h2>Bestand</h2>
-<div id="gruppenContainer"></div>
+<div id="container"></div>
 
-<h2>Offene Zahlungen</h2>
-<div id="offeneListe"></div>
-
-<button id="reset" class="danger">Alles löschen</button>
-
-</div>
-
-<!-- POPUP -->
-<div id="popup">
-<div id="popupBox">
-    <input id="popupName" placeholder="Name">
-    <input id="popupBetrag" placeholder="Betrag">
-    <button id="savePay" class="primary">Speichern</button>
-    <button onclick="closePopup()" class="secondary">Abbrechen</button>
-</div>
 </div>
 
 <!-- FIREBASE -->
@@ -171,25 +126,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let artikelListe = [];
-let offeneListe = [];
-let selectedId = null;
-
-// ================= LOAD =================
-async function load() {
-
-    artikelListe = [];
-    offeneListe = [];
-
-    const a = await getDocs(collection(db,"artikel"));
-    a.forEach(d => artikelListe.push({id:d.id,...d.data()}));
-
-    const o = await getDocs(collection(db,"offene"));
-    o.forEach(d => offeneListe.push({id:d.id,...d.data()}));
-
-    render();
-    renderOffene();
-}
+let data = [];
 
 // ================= ADD =================
 async function addArtikel() {
@@ -202,60 +139,85 @@ async function addArtikel() {
     if(!name || !groesse || isNaN(bestand)) return;
 
     await addDoc(collection(db,"artikel"),{
-        name,kategorie,groesse,bestand
+        name,
+        kategorie,
+        groesse,
+        bestand
     });
 
     document.getElementById("addForm").reset();
     load();
 }
 
+// ================= LOAD =================
+async function load() {
+
+    data = [];
+
+    const snap = await getDocs(collection(db,"artikel"));
+
+    snap.forEach(d=>{
+        data.push({id:d.id,...d.data()});
+    });
+
+    render();
+}
+
+// ================= GROUP =================
+function group() {
+
+    const g = {};
+
+    data.forEach(a=>{
+        const key = a.name + "___" + a.kategorie;
+        if(!g[key]) g[key]=[];
+        g[key].push(a);
+    });
+
+    return g;
+}
+
 // ================= RENDER =================
 function render() {
 
-    const c = document.getElementById("gruppenContainer");
-    c.innerHTML="";
+    const c = document.getElementById("container");
+    c.innerHTML = "";
 
-    artikelListe.forEach(a=>{
+    const groups = group();
 
-        const div=document.createElement("div");
-        div.className="gruppe";
+    Object.keys(groups).forEach(key=>{
 
-        div.innerHTML=`
-            ${a.name} (${a.kategorie}) - ${a.groesse}
-            <br> Bestand: ${a.bestand}
-            <br>
-            <button onclick="plus('${a.id}')">+1</button>
-            <button onclick="minus('${a.id}')">-1</button>
-            <button onclick="del('${a.id}')">Löschen</button>
-        `;
+        const [name,kat] = key.split("___");
 
-        c.appendChild(div);
-    });
-}
+        const box = document.createElement("div");
+        box.className="group";
+        box.innerHTML=`${name} (${kat})`;
 
-// ================= OFFENE =================
-function renderOffene() {
+        groups[key].forEach(a=>{
 
-    const c=document.getElementById("offeneListe");
-    c.innerHTML="";
+            const item = document.createElement("div");
+            item.className="item";
 
-    offeneListe.forEach(o=>{
+            item.innerHTML=`
+                Größe: <b>${a.groesse}</b>
+                | Bestand: <b>${a.bestand}</b>
 
-        const div=document.createElement("div");
+                <button onclick="plus('${a.id}')">+1</button>
+                <button onclick="minus('${a.id}')">-1</button>
+                <button onclick="del('${a.id}')">Löschen</button>
+            `;
 
-        div.innerHTML=`
-            <b>${o.name}</b> - ${o.artikel}
-            (${o.groesse}) | ${o.betrag}€
-        `;
+            box.appendChild(item);
+        });
 
-        c.appendChild(div);
+        c.appendChild(box);
     });
 }
 
 // ================= ACTIONS =================
 window.plus = async id => {
 
-    const a = artikelListe.find(x=>x.id===id);
+    const a = data.find(x=>x.id===id);
 
     await updateDoc(doc(db,"artikel",id),{
         bestand:a.bestand+1
@@ -264,56 +226,31 @@ window.plus = async id => {
     load();
 };
 
-window.minus = id => {
-    selectedId = id;
-    document.getElementById("popup").style.display="flex";
-};
+window.minus = async id => {
 
-window.closePopup = () => {
-    document.getElementById("popup").style.display="none";
-};
+    const a = data.find(x=>x.id===id);
 
-savePay.onclick = async () => {
-
-    const a = artikelListe.find(x=>x.id===selectedId);
-
-    await updateDoc(doc(db,"artikel",selectedId),{
+    await updateDoc(doc(db,"artikel",id),{
         bestand:a.bestand-1
     });
 
-    await addDoc(collection(db,"offene"),{
-        name:popupName.value,
-        betrag:popupBetrag.value,
-        artikel:a.name,
-        groesse:a.groesse
-    });
-
-    closePopup();
     load();
 };
 
 window.del = async id => {
 
     await deleteDoc(doc(db,"artikel",id));
+
     load();
 };
 
+// ================= FORM =================
 document.getElementById("addForm").addEventListener("submit",e=>{
     e.preventDefault();
     addArtikel();
 });
 
-reset.onclick = async () => {
-
-    const a = await getDocs(collection(db,"artikel"));
-    a.forEach(async d=>await deleteDoc(doc(db,"artikel",d.id)));
-
-    const o = await getDocs(collection(db,"offene"));
-    o.forEach(async d=>await deleteDoc(doc(db,"offene",d.id)));
-
-    load();
-};
-
+// ================= START =================
 load();
 
 </script>
