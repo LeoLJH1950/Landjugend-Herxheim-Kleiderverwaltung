@@ -120,7 +120,6 @@ const db=getFirestore(app);
 let data=[];
 let open=[];
 let current=null;
-let direct=false;
 
 /* ================= LOGIN ================= */
 window.check=()=>{
@@ -226,14 +225,12 @@ load();
 /* ================= MINUS ================= */
 window.minus=id=>{
 current=id;
-direct=false;
 document.getElementById("payPopup").style.display="flex";
 document.getElementById("details").style.display="none";
 };
 
 /* ================= PAYMENT ================= */
 window.directPay=(yes)=>{
-direct=yes;
 if(yes){
 finishSale();
 }else{
@@ -295,16 +292,13 @@ c.appendChild(d);
 });
 }
 
-/* ================= MARK PAID ================= */
+/* ================= DELETE / PAID ================= */
 window.markPaid=async(id)=>{
-
 await deleteDoc(doc(db,"offene",id));
 load();
 };
 
-/* ================= DELETE DEBT ================= */
 window.deleteDebt=async(id)=>{
-
 await deleteDoc(doc(db,"offene",id));
 load();
 };
