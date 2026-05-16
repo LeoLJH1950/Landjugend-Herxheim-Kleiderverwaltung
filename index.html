@@ -4,355 +4,600 @@
 <meta charset="UTF-8">
 <title>Kleiderverwaltung LJH</title>
 
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
 <style>
+/* Grundlayout */
+:root{
+  --blau:#0077cc;
+  --gruen:#3cb043;
+  --rot:#dc3545;
+  --hell:#f5f5f5;
+  --weiss:#ffffff;
+}
+*{box-sizing:border-box}
 body{
-    font-family:Arial;
-    margin:0;
-    background:#f5f5f5;
+  font-family:Arial,Helvetica,sans-serif;
+  margin:0;
+  background:var(--hell);
+  color:#222;
 }
 
-/* HEADER */
+/* Header */
 header{
-    background:linear-gradient(90deg,#0077cc,#3cb043);
-    color:white;
-    padding:20px;
-    text-align:center;
+  background:linear-gradient(90deg,var(--blau),var(--gruen));
+  color:var(--weiss);
+  padding:18px 12px;
+  text-align:center;
 }
 
-/* CONTAINER */
+/* Container */
 .container{
-    max-width:900px;
-    margin:20px auto;
-    background:white;
-    padding:20px;
-    border-radius:10px;
+  max-width:980px;
+  margin:18px auto;
+  background:var(--weiss);
+  padding:18px;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.06);
 }
 
-/* BUTTONS */
+/* Buttons */
 button{
-    padding:6px 10px;
-    border:none;
-    cursor:pointer;
-    border-radius:4px;
+  padding:8px 10px;
+  border-radius:6px;
+  border:0;
+  cursor:pointer;
 }
-.primary{background:#0077cc;color:white}
-.secondary{background:#3cb043;color:white}
-.danger{background:#dc3545;color:white}
+.primary{background:var(--blau);color:white}
+.secondary{background:var(--gruen);color:white}
+.danger{background:var(--rot);color:white}
 
-/* KARTEN */
+/* Karten / Listen */
 .card{
-    background:#e9f5ff;
-    padding:12px;
-    margin-top:10px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:bold;
+  background:#e9f5ff;
+  padding:12px;
+  margin-top:10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:700;
 }
-
-/* ITEMS */
 .item{
-    background:white;
-    border:1px solid #ddd;
-    margin-top:6px;
-    padding:8px;
-    border-radius:6px;
+  background:var(--weiss);
+  border:1px solid #e6e6e6;
+  margin-top:8px;
+  padding:10px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
 }
 
-/* LOGIN OVERLAY */
+/* Login Overlay (zentriert) */
 #lock{
-    position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.6);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    z-index:9999;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.lockBox{
+  width:360px;
+  max-width:92%;
+  background:var(--weiss);
+  padding:22px;
+  border-radius:12px;
+  text-align:center;
+  box-shadow:0 6px 30px rgba(0,0,0,0.25);
+}
+.lockBox h2{margin:0 0 10px}
+.lockBox input{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border-radius:8px;
+  border:1px solid #ddd;
 }
 
-.box{
-    background:white;
-    padding:25px;
-    border-radius:12px;
-    width:300px;
-    text-align:center;
-}
-
-/* PAYMENT POPUP */
+/* Payment popup */
 #pay{
-    position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.6);
-    display:none;
-    justify-content:center;
-    align-items:center;
-    z-index:9998;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9998;
 }
+.payBox{
+  width:360px;
+  max-width:94%;
+  background:var(--weiss);
+  padding:18px;
+  border-radius:10px;
+  text-align:center;
+}
+.payBox input{
+  width:100%;
+  padding:8px;
+  margin:8px 0;
+  border-radius:6px;
+  border:1px solid #ddd;
+}
+
+/* Formular für neuen Artikel */
+.addRow{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap:8px;
+  margin-bottom:12px;
+}
+@media (max-width:720px){
+  .addRow{grid-template-columns:1fr; }
+  .item{flex-direction:column;align-items:flex-start;gap:8px}
+}
+
+/* kleine Buttons in Listen */
+.smallBtn{padding:6px 8px;border-radius:6px;font-size:0.9rem}
+
+/* Trennlinie */
+.hr{height:1px;background:#eee;margin:14px 0;border-radius:2px}
 </style>
 </head>
-
 <body>
 
-<!-- LOGIN -->
-<div id="lock">
-    <div class="box">
-        <h2>Passwort eingeben</h2>
-        <input id="pw" type="password" style="width:100%;padding:8px;">
-        <button class="primary" onclick="login()">Login</button>
-        <p id="err" style="color:red;display:none;">Falsches Passwort</p>
+<!-- LOGIN OVERLAY (blockiert alles bis Login) -->
+<div id="lock" aria-hidden="false">
+  <div class="lockBox" role="dialog" aria-modal="true" aria-label="Passwort">
+    <h2>Passwort eingeben</h2>
+    <input id="pw" type="password" placeholder="Passwort">
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">
+      <button class="primary" onclick="login()">Anmelden</button>
+      <button onclick="fillDemo()">Demo</button>
     </div>
+    <p id="err" style="color:var(--rot);display:none;margin-top:10px;">Falsches Passwort</p>
+  </div>
 </div>
 
 <header>
-<h1>Kleiderverwaltung LJH</h1>
+  <h1>Kleiderverwaltung LJH</h1>
 </header>
 
 <div class="container">
 
-<h2 id="title">Kategorien</h2>
-<div id="view"></div>
+  <!-- Artikel anlegen -->
+  <h2>Neuen Artikel anlegen</h2>
+  <div class="addRow" style="margin-bottom:8px;">
+    <input id="newName" placeholder="Artikel (z.B. Hose)" aria-label="Artikelname">
+    <select id="newKat" aria-label="Kategorie">
+      <option value="Herren">Herren</option>
+      <option value="Damen">Damen</option>
+      <option value="Unisex">Unisex</option>
+    </select>
+    <input id="newSize" placeholder="Größe (z.B. M)" aria-label="Größe">
+    <input id="newCount" type="number" min="0" value="1" placeholder="Stückzahl" aria-label="Stückzahl">
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="primary" onclick="addArticle()">Hinzufügen</button>
+    <button onclick="resetAdd()">Zurücksetzen</button>
+  </div>
 
-<h2>Offene Rechnungen</h2>
-<div id="open"></div>
+  <div class="hr"></div>
+
+  <!-- Navigation / Ansicht -->
+  <h2 id="title">Artikel</h2>
+  <div id="view" aria-live="polite"></div>
+
+  <div class="hr"></div>
+
+  <!-- Offene Rechnungen -->
+  <h2>Offene Rechnungen</h2>
+  <div id="open" aria-live="polite"></div>
 
 </div>
 
-<!-- PAYMENT POPUP -->
-<div id="pay">
-    <div class="box">
-        <h3>Verkauf erfassen</h3>
+<!-- PAYMENT POPUP (zweistufig) -->
+<div id="pay" aria-hidden="true">
+  <div class="payBox" role="dialog" aria-modal="true" aria-label="Verkauf erfassen">
+    <h3>Verkauf erfassen</h3>
+    <p id="payInfo" style="margin:6px 0 12px;"></p>
 
-        <p>Direkt bezahlt?</p>
+    <div id="payStep1">
+      <p>Direkt bezahlt?</p>
+      <div style="display:flex;gap:8px;justify-content:center;">
         <button class="secondary" onclick="directPay(true)">Ja</button>
         <button class="primary" onclick="directPay(false)">Nein</button>
-
-        <div id="payForm" style="display:none;margin-top:10px;">
-            <input id="buyer" placeholder="Name" style="width:100%;padding:8px;margin-bottom:8px;">
-            <input id="amount" placeholder="Betrag (€)" style="width:100%;padding:8px;margin-bottom:8px;">
-            <button class="primary" onclick="saveDebt()">Speichern</button>
-        </div>
-
-        <button class="danger" onclick="closePay()" style="margin-top:10px;">Abbrechen</button>
+      </div>
     </div>
+
+    <div id="payForm" style="display:none;margin-top:10px;">
+      <input id="buyer" placeholder="Name des Käufers">
+      <input id="amount" placeholder="Betrag (€)" inputmode="decimal">
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+        <button class="primary" onclick="saveDebt()">Speichern</button>
+        <button onclick="cancelPay()">Abbrechen</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <button class="danger" onclick="closePay()">Schließen</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
-
-/* ================= FIREBASE IMPORT ================= */
+/* ================= FIREBASE (modular v12) ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
 import {
-    getFirestore,
-    collection,
-    getDocs,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    doc
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-/* ================= FIREBASE CONFIG ================= */
-const firebaseConfig={
-apiKey:"AIzaSyCD0Pz2LpOdFQ6-UrlNCuHQ5sqW87SgsDs",
-authDomain:"ljh-kleider.firebaseapp.com",
-projectId:"ljh-kleider",
-storageBucket:"ljh-kleider.firebasestorage.app",
-messagingSenderId:"76446271591",
-appId:"1:76446271591:web:ecd096fa6c9afa570fecc2"
+/* ================= DEINE FIREBASE CONFIG ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyCD0Pz2LpOdFQ6-UrlNCuHQ5sqW87SgsDs",
+  authDomain: "ljh-kleider.firebaseapp.com",
+  projectId: "ljh-kleider",
+  storageBucket: "ljh-kleider.firebasestorage.app",
+  messagingSenderId: "76446271591",
+  appId: "1:76446271591:web:ecd096fa6c9afa570fecc2"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 /* ================= STATE ================= */
-let data=[];
-let open=[];
-let step=0;
-let cat="";
-let sub="";
-let current=null;
+let data = [];        // artikel: {id, name, kat, size, count}
+let open = [];        // offene: {id, name, betrag, artikel, size}
+let step = 0;         // 0: Artikelnamen, 1: Kategorie, 2: Größen
+let cat = "";
+let sub = "";
+let current = null;   // id des aktuell ausgewählten Artikels (für -1)
+
+/* ================= HILFS-FUNKTIONEN ================= */
+const $ = id => document.getElementById(id);
 
 /* ================= LOGIN ================= */
-window.login=()=>{
-    if(pw.value==="LJH1950"){
-        lock.style.display="none";
-        load();
-    } else {
-        err.style.display="block";
-    }
+window.login = () => {
+  const pwVal = $('pw').value || "";
+  if (pwVal === "LJH1950") {
+    $('lock').style.display = "none";
+    $('lock').setAttribute('aria-hidden','true');
+    load();
+  } else {
+    $('err').style.display = "block";
+  }
 };
 
-/* ================= LOAD DATA ================= */
+/* Demo-Fill (nur lokal, hilft beim Testen) */
+window.fillDemo = async () => {
+  // Beispielartikel anlegen, falls DB leer ist
+  await addDoc(collection(db,"artikel"),{name:"Hose",kat:"Herren",size:"M",count:5});
+  await addDoc(collection(db,"artikel"),{name:"Hose",kat:"Damen",size:"S",count:3});
+  await addDoc(collection(db,"artikel"),{name:"T-Shirt",kat:"Unisex",size:"L",count:8});
+  $('pw').value = "LJH1950";
+  login();
+};
+
+/* ================= LADEN (aus Firestore) ================= */
 async function load(){
+  data = [];
+  open = [];
 
-    data=[];
-    open=[];
+  // Artikel laden
+  const snapA = await getDocs(collection(db,"artikel"));
+  snapA.forEach(d => data.push({ id: d.id, ...d.data() }));
 
-    const a=await getDocs(collection(db,"artikel"));
-    a.forEach(d=>data.push({id:d.id,...d.data()}));
+  // Offene Rechnungen laden
+  const snapO = await getDocs(collection(db,"offene"));
+  snapO.forEach(d => open.push({ id: d.id, ...d.data() }));
 
-    const o=await getDocs(collection(db,"offene"));
-    o.forEach(d=>open.push({id:d.id,...d.data()}));
-
-    render();
-    renderOpen();
+  // Reset Navigation wenn nötig
+  if (step > 2) step = 0;
+  render();
+  renderOpen();
 }
 
-/* ================= RENDER NAVIGATION ================= */
+/* ================= ARTIKEL HINZUFÜGEN ================= */
+window.addArticle = async () => {
+  const name = $('newName').value.trim();
+  const kat = $('newKat').value;
+  const size = $('newSize').value.trim();
+  const count = parseInt($('newCount').value || "0", 10);
+
+  if (!name) { alert("Bitte Artikelname eingeben."); return; }
+  if (!size) { alert("Bitte Größe eingeben."); return; }
+  if (isNaN(count) || count < 0) { alert("Bitte gültige Stückzahl eingeben."); return; }
+
+  // Speichern in Firestore
+  await addDoc(collection(db,"artikel"),{
+    name, kat, size, count
+  });
+
+  // Formular zurücksetzen und neu laden
+  $('newName').value = "";
+  $('newSize').value = "";
+  $('newCount').value = "1";
+
+  await load();
+  // optional: direkt zur passenden Ansicht springen
+  step = 0;
+  render();
+};
+
+/* Reset Add-Form */
+window.resetAdd = () => {
+  $('newName').value = "";
+  $('newKat').value = "Herren";
+  $('newSize').value = "";
+  $('newCount').value = "1";
+};
+
+/* ================= RENDER / NAVIGATION (dreistufig) ================= */
 function render(){
+  const v = $('view');
+  v.innerHTML = "";
 
-    const v=document.getElementById("view");
-    v.innerHTML="";
-
-    /* STEP 0 → Artikelname */
-    if(step===0){
-        title.innerText="Artikel";
-
-        const names=[...new Set(data.map(x=>x.name))];
-
-        names.forEach(n=>{
-            let d=document.createElement("div");
-            d.className="card";
-            d.innerText=n;
-
-            d.onclick=()=>{
-                cat=n;
-                step=1;
-                render();
-            };
-
-            v.appendChild(d);
-        });
+  // STEP 0: Artikelnamen
+  if (step === 0) {
+    $('title').innerText = "Artikel";
+    const names = [...new Set(data.map(x => x.name))].sort();
+    if (names.length === 0) {
+      const p = document.createElement('p');
+      p.style.color = "#666";
+      p.innerText = "Keine Artikel vorhanden. Lege einen neuen Artikel an.";
+      v.appendChild(p);
+      return;
     }
+    names.forEach(n => {
+      const d = document.createElement('div');
+      d.className = "card";
+      d.innerText = n;
+      d.onclick = () => { cat = n; step = 1; render(); };
+      v.appendChild(d);
+    });
+    return;
+  }
 
-    /* STEP 1 → Kategorie */
-    if(step===1){
-        title.innerText=cat;
-
-        const cats=[...new Set(data.filter(x=>x.name===cat).map(x=>x.kat))];
-
-        cats.forEach(c=>{
-            let d=document.createElement("div");
-            d.className="card";
-            d.innerText=c;
-
-            d.onclick=()=>{
-                sub=c;
-                step=2;
-                render();
-            };
-
-            v.appendChild(d);
-        });
-    }
-
-    /* STEP 2 → Größen */
-    if(step===2){
-        title.innerText=cat+" → "+sub;
-
-        data.filter(x=>x.name===cat && x.kat===sub)
-        .forEach(a=>{
-
-            let d=document.createElement("div");
-            d.className="item";
-
-            d.innerHTML=`
-                <b>${a.size}</b> | Bestand: ${a.count}
-                <button class="secondary" onclick="plus('${a.id}')">+1</button>
-                <button class="danger" onclick="minus('${a.id}')">-1</button>
-            `;
-
-            v.appendChild(d);
-        });
-    }
-}
-
-/* ================= PLUS ================= */
-window.plus=async id=>{
-    let a=data.find(x=>x.id===id);
-    await updateDoc(doc(db,"artikel",id),{count:a.count+1});
-    load();
-};
-
-/* ================= MINUS ================= */
-window.minus=id=>{
-    current=id;
-    pay.style.display="flex";
-    payForm.style.display="none";
-};
-
-/* ================= PAYMENT ================= */
-window.directPay=(yes)=>{
-    if(yes){
-        finish();
-    } else {
-        payForm.style.display="block";
-    }
-};
-
-window.saveDebt=async()=>{
-
-    let a=data.find(x=>x.id===current);
-
-    await addDoc(collection(db,"offene"),{
-        name:buyer.value,
-        betrag:amount.value,
-        artikel:a.name,
-        size:a.size
+  // STEP 1: Kategorien (Herren/Damen/Unisex)
+  if (step === 1) {
+    $('title').innerText = cat;
+    const cats = [...new Set(data.filter(x => x.name === cat).map(x => x.kat))].sort();
+    cats.forEach(k => {
+      const d = document.createElement('div');
+      d.className = "card";
+      d.innerText = k;
+      d.onclick = () => { sub = k; step = 2; render(); };
+      v.appendChild(d);
     });
 
-    finish();
-};
+    // Zurück-Button
+    const back = document.createElement('div');
+    back.style.marginTop = "12px";
+    const b = document.createElement('button');
+    b.innerText = "Zurück";
+    b.onclick = () => { step = 0; render(); };
+    back.appendChild(b);
+    v.appendChild(back);
+    return;
+  }
 
-async function finish(){
+  // STEP 2: Größen / Items
+  if (step === 2) {
+    $('title').innerText = `${cat} → ${sub}`;
 
-    let a=data.find(x=>x.id===current);
+    const list = data.filter(x => x.name === cat && x.kat === sub)
+                     .sort((a,b) => a.size.localeCompare(b.size, undefined, {numeric:true}));
 
-    await updateDoc(doc(db,"artikel",current),{
-        count:a.count-1
+    if (list.length === 0) {
+      const p = document.createElement('p');
+      p.style.color = "#666";
+      p.innerText = "Keine Größen vorhanden.";
+      v.appendChild(p);
+    }
+
+    list.forEach(a => {
+      const d = document.createElement('div');
+      d.className = "item";
+
+      const left = document.createElement('div');
+      left.innerHTML = `<strong>${a.size}</strong><div style="color:#666;font-size:0.9rem">${a.count} Stück</div>`;
+
+      const right = document.createElement('div');
+      right.style.display = "flex";
+      right.style.gap = "8px";
+      right.style.alignItems = "center";
+
+      const plusBtn = document.createElement('button');
+      plusBtn.className = "smallBtn secondary";
+      plusBtn.innerText = "+1";
+      plusBtn.onclick = (ev) => { ev.stopPropagation(); plus(a.id); };
+
+      const minusBtn = document.createElement('button');
+      minusBtn.className = "smallBtn danger";
+      minusBtn.innerText = "-1";
+      minusBtn.onclick = (ev) => { ev.stopPropagation(); minus(a.id); };
+
+      const delBtn = document.createElement('button');
+      delBtn.className = "smallBtn";
+      delBtn.style.background = "#eee";
+      delBtn.innerText = "Löschen";
+      delBtn.onclick = (ev) => { ev.stopPropagation(); removeArticle(a.id); };
+
+      right.appendChild(plusBtn);
+      right.appendChild(minusBtn);
+      right.appendChild(delBtn);
+
+      d.appendChild(left);
+      d.appendChild(right);
+
+      v.appendChild(d);
     });
 
-    closePay();
-    load();
+    // Navigation zurück
+    const nav = document.createElement('div');
+    nav.style.marginTop = "12px";
+    const back = document.createElement('button');
+    back.innerText = "Zurück";
+    back.onclick = () => { step = 1; render(); };
+    nav.appendChild(back);
+    v.appendChild(nav);
+  }
 }
 
-/* ================= OFFENE RECHNUNGEN ================= */
+/* ================= PLUS (Erhöhen) ================= */
+window.plus = async (id) => {
+  const a = data.find(x => x.id === id);
+  if (!a) return;
+  await updateDoc(doc(db,"artikel",id),{ count: a.count + 1 });
+  await load();
+};
+
+/* ================= MINUS (Verkauf) ================= */
+window.minus = (id) => {
+  current = id;
+  // Anzeige des Artikels im Popup
+  const a = data.find(x => x.id === id);
+  if (!a) return;
+  $('pay').style.display = "flex";
+  $('pay').setAttribute('aria-hidden','false');
+  $('payInfo').innerText = `${a.name} • ${a.kat} • ${a.size} — aktueller Bestand: ${a.count}`;
+  $('payForm').style.display = "none";
+  $('buyer').value = "";
+  $('amount').value = "";
+};
+
+/* ================= PAYMENT FLOW ================= */
+window.directPay = (yes) => {
+  if (yes) {
+    finishSale(true);
+  } else {
+    $('payForm').style.display = "block";
+  }
+};
+
+window.saveDebt = async () => {
+  const buyer = $('buyer').value.trim();
+  const amount = $('amount').value.trim();
+  if (!buyer || !amount) { alert("Bitte Name und Betrag eingeben."); return; }
+
+  const a = data.find(x => x.id === current);
+  if (!a) return;
+
+  // offene Rechnung speichern
+  await addDoc(collection(db,"offene"),{
+    name: buyer,
+    betrag: amount,
+    artikel: a.name,
+    size: a.size
+  });
+
+  await finishSale(false);
+};
+
+async function finishSale(direct = false){
+  const a = data.find(x => x.id === current);
+  if (!a) return;
+
+  // Bestand verringern (nur wenn >0)
+  const newCount = Math.max(0, (a.count || 0) - 1);
+  await updateDoc(doc(db,"artikel",current),{ count: newCount });
+
+  closePay();
+  await load();
+}
+
+/* Cancel / Close */
+window.cancelPay = () => {
+  $('payForm').style.display = "none";
+  $('buyer').value = "";
+  $('amount').value = "";
+};
+window.closePay = () => {
+  $('pay').style.display = "none";
+  $('pay').setAttribute('aria-hidden','true');
+  current = null;
+};
+
+/* ================= OFFENE RECHNUNGEN RENDERN ================= */
 function renderOpen(){
+  const c = $('open');
+  c.innerHTML = "";
 
-    const c=document.getElementById("open");
-    c.innerHTML="";
+  if (open.length === 0) {
+    const p = document.createElement('p');
+    p.style.color = "#666";
+    p.innerText = "Keine offenen Rechnungen.";
+    c.appendChild(p);
+    return;
+  }
 
-    open.forEach(o=>{
+  open.forEach(o => {
+    const d = document.createElement('div');
+    d.className = "item";
 
-        let d=document.createElement("div");
-        d.className="item";
+    const left = document.createElement('div');
+    left.innerHTML = `<strong>${o.name}</strong><div style="font-size:0.95rem;color:#555">${o.artikel} • ${o.size}</div>`;
 
-        d.innerHTML=`
-            <b>${o.name}</b> – ${o.artikel} (${o.size})<br>
-            ${o.betrag} €
-            <br>
-            <button class="secondary" onclick="paid('${o.id}')">Bezahlt</button>
-            <button class="danger" onclick="del('${o.id}')">Löschen</button>
-        `;
+    const right = document.createElement('div');
+    right.style.display = "flex";
+    right.style.gap = "8px";
+    right.style.alignItems = "center";
 
-        c.appendChild(d);
-    });
+    const amt = document.createElement('div');
+    amt.style.fontWeight = "700";
+    amt.style.marginRight = "8px";
+    amt.innerText = `${o.betrag} €`;
+
+    const paidBtn = document.createElement('button');
+    paidBtn.className = "secondary smallBtn";
+    paidBtn.innerText = "Bezahlt";
+    paidBtn.onclick = () => paid(o.id);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = "danger smallBtn";
+    delBtn.innerText = "Löschen";
+    delBtn.onclick = () => del(o.id);
+
+    right.appendChild(amt);
+    right.appendChild(paidBtn);
+    right.appendChild(delBtn);
+
+    d.appendChild(left);
+    d.appendChild(right);
+
+    c.appendChild(d);
+  });
 }
 
-/* ================= DELETE ================= */
-window.paid=async id=>{
-    await deleteDoc(doc(db,"offene",id));
-    load();
+/* ================= BEZAHLT / LÖSCHEN ================= */
+window.paid = async (id) => {
+  await deleteDoc(doc(db,"offene",id));
+  await load();
 };
 
-window.del=async id=>{
-    await deleteDoc(doc(db,"offene",id));
-    load();
+window.del = async (id) => {
+  if (!confirm("Eintrag wirklich löschen?")) return;
+  await deleteDoc(doc(db,"offene",id));
+  await load();
 };
 
-window.closePay=()=>{
-    pay.style.display="none";
+/* ================= ARTIKEL LÖSCHEN ================= */
+window.removeArticle = async (id) => {
+  if (!confirm("Artikel wirklich löschen?")) return;
+  await deleteDoc(doc(db,"artikel",id));
+  await load();
 };
+
+/* ================= INITIAL (falls bereits eingeloggt) ================= */
+/* Hinweis: Seite ist gesperrt bis Login. Wenn du die Seite testen willst,
+   benutze die Demo-Schaltfläche im Login-Dialog oder gib das Passwort ein. */
 
 </script>
 
