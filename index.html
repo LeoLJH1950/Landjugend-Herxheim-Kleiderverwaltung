@@ -2,141 +2,83 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Landjugend Herxheim – Kleiderverwaltung</title>
+<title>Kleiderverwaltung</title>
 
 <style>
 :root {
-    --blau: #0077cc;
-    --gruen: #3cb043;
-    --rot: #dc3545;
-    --hellgrau: #f5f5f5;
+    --blau:#0077cc;
+    --gruen:#3cb043;
+    --rot:#dc3545;
+    --hell:#f5f5f5;
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: Arial;
     margin: 0;
-    background: var(--hellgrau);
-}
-
-/* Passwort */
-#passwortOverlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-#passwortBox {
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 350px;
-    text-align: center;
+    background: var(--hell);
 }
 
 header {
-    background: linear-gradient(90deg, var(--blau), var(--gruen));
-    color: white;
-    padding: 20px;
-    text-align: center;
+    background: linear-gradient(90deg,var(--blau),var(--gruen));
+    color:white;
+    padding:20px;
+    text-align:center;
 }
 
 .container {
-    max-width: 900px;
-    margin: 20px auto;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
+    max-width:900px;
+    margin:20px auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
 }
 
 form {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
 }
 
-input, select {
-    padding: 6px;
+input,select {
+    padding:6px;
 }
 
-button.primary { background: var(--blau); color: white; border: none; padding: 7px 12px; }
-button.secondary { background: var(--gruen); color: white; border: none; padding: 7px 12px; }
-button.danger { background: var(--rot); color: white; border: none; padding: 7px 12px; }
+button {
+    padding:7px 12px;
+    border:none;
+    cursor:pointer;
+}
+
+.primary { background:var(--blau); color:white; }
+.secondary { background:var(--gruen); color:white; }
+.danger { background:var(--rot); color:white; }
 
 .gruppe {
-    background: #e9f5ff;
-    padding: 12px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.untergruppe {
-    display: none;
-    margin-left: 20px;
+    background:#e9f5ff;
+    padding:10px;
+    margin-top:10px;
+    cursor:pointer;
 }
 
 table {
-    width: 100%;
-    border-collapse: collapse;
+    width:100%;
+    margin-top:10px;
+    border-collapse:collapse;
 }
 
 th {
-    background: var(--blau);
-    color: white;
+    background:var(--blau);
+    color:white;
 }
 
 td {
-    border: 1px solid #ddd;
-    padding: 6px;
-}
-
-.low-stock {
-    background: #fff3cd;
-}
-
-#popup {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-}
-
-#popupContent {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
+    border:1px solid #ddd;
+    padding:6px;
 }
 </style>
 </head>
 
 <body>
-
-<!-- Passwort -->
-<div id="passwortOverlay">
-    <div id="passwortBox">
-        <h2>Passwort</h2>
-        <input type="password" id="pwInput">
-        <button onclick="checkPasswort()">Weiter</button>
-    </div>
-</div>
-
-<script>
-const PASSWORT = "LJH1950";
-function checkPasswort() {
-    if (document.getElementById("pwInput").value === PASSWORT) {
-        document.getElementById("passwortOverlay").style.display = "none";
-    }
-}
-</script>
 
 <header>
 <h1>Kleiderverwaltung</h1>
@@ -147,39 +89,24 @@ function checkPasswort() {
 <h2>Artikel hinzufügen</h2>
 
 <form id="addForm">
-    <input type="text" id="name" placeholder="Name" required>
+    <input id="name" placeholder="Name">
     <select id="kategorie">
         <option>Damen</option>
         <option>Herren</option>
         <option>Unisex</option>
         <option>Kinder</option>
     </select>
-    <input type="text" id="groesse" placeholder="Größe" required>
-    <input type="number" id="bestand" placeholder="Bestand" required>
+    <input id="groesse" placeholder="Größe">
+    <input id="bestand" type="number" placeholder="Bestand">
     <button class="primary" type="submit">Hinzufügen</button>
 </form>
 
 <h2>Bestand</h2>
 <div id="gruppenContainer"></div>
 
-<h2>Offene Zahlungen</h2>
-<div id="offeneListe"></div>
-
-<button id="resetAll" class="danger">Alle löschen</button>
-
 </div>
 
-<!-- Popup -->
-<div id="popup">
-<div id="popupContent">
-    <input type="text" id="popupName" placeholder="Name">
-    <input type="number" id="popupBetrag" placeholder="Betrag">
-    <button id="popupSave">Speichern</button>
-    <button id="popupCancel">Abbrechen</button>
-</div>
-</div>
-
-<!-- FIREBASE -->
+<!-- ================= FIREBASE ================= -->
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
@@ -187,10 +114,7 @@ import {
     getFirestore,
     collection,
     addDoc,
-    getDocs,
-    updateDoc,
-    deleteDoc,
-    doc
+    getDocs
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -206,43 +130,46 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let artikelListe = [];
-let offeneZahlungen = [];
-let aktuellerArtikelID = null;
 
-// 🔥 FIX: Daten korrekt aus Inputs holen
+// ===== ADD ARTIKEL (100% FIXED) =====
 async function addArtikel() {
 
-    const name = document.getElementById("name").value;
+    const name = document.getElementById("name").value.trim();
     const kategorie = document.getElementById("kategorie").value;
-    const groesse = document.getElementById("groesse").value;
-    const bestand = document.getElementById("bestand").value;
+    const groesse = document.getElementById("groesse").value.trim();
+    const bestand = Number(document.getElementById("bestand").value);
+
+    if (!name || !groesse || isNaN(bestand)) {
+        alert("Bitte alles ausfüllen!");
+        return;
+    }
 
     await addDoc(collection(db, "artikel"), {
-        name: name,
-        kategorie: kategorie,
-        groesse: groesse,
-        bestand: parseInt(bestand)
+        name,
+        kategorie,
+        groesse,
+        bestand
     });
 
+    document.getElementById("addForm").reset();
     ladeDaten();
 }
 
-// Laden
+// ===== LOAD =====
 async function ladeDaten() {
 
     artikelListe = [];
-    offeneZahlungen = [];
 
-    const aSnap = await getDocs(collection(db, "artikel"));
-    aSnap.forEach(d => artikelListe.push({ id: d.id, ...d.data() }));
+    const snap = await getDocs(collection(db, "artikel"));
 
-    const oSnap = await getDocs(collection(db, "offeneZahlungen"));
-    oSnap.forEach(d => offeneZahlungen.push({ id: d.id, ...d.data() }));
+    snap.forEach(d => {
+        artikelListe.push({ id: d.id, ...d.data() });
+    });
 
     render();
 }
 
-// Render
+// ===== RENDER =====
 function render() {
 
     const c = document.getElementById("gruppenContainer");
@@ -252,24 +179,23 @@ function render() {
 
         const div = document.createElement("div");
         div.className = "gruppe";
-        div.innerHTML = `${a.name} (${a.kategorie}) - ${a.groesse} | Bestand: ${a.bestand}`;
 
-        div.onclick = () => {
-            alert("Funktion bleibt gleich, kannst du später erweitern");
-        };
+        div.innerHTML = `
+            <b>${a.name}</b> (${a.kategorie})<br>
+            Größe: ${a.groesse} | Bestand: ${a.bestand}
+        `;
 
         c.appendChild(div);
     });
 }
 
-// Submit
+// ===== FORM =====
 document.getElementById("addForm").addEventListener("submit", e => {
     e.preventDefault();
     addArtikel();
-    e.target.reset();
 });
 
-// Start
+// ===== START =====
 ladeDaten();
 
 </script>
