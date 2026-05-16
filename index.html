@@ -151,9 +151,11 @@ button{
     <input id="pw" type="password" placeholder="Passwort" aria-label="Passwort">
     <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;">
       <button class="primary" onclick="login()">Anmelden</button>
-      <button onclick="fillDemo()">Demo</button>
+      <!-- Demo füllt nur das Formular, gewährt aber keinen Zugriff -->
+      <button onclick="fillDemoForm()">Demo (nur Formular füllen)</button>
     </div>
     <p id="err" style="color:var(--rot);display:none;margin-top:10px;">Falsches Passwort</p>
+    <p style="color:#666;margin-top:8px;font-size:0.9rem;">Bearbeiten ist nur nach Eingabe des Passworts möglich.</p>
   </div>
 </div>
 
@@ -261,6 +263,9 @@ let current = null;   // id des aktuell ausgewählten Artikels (für -1)
 const $ = id => document.getElementById(id);
 
 /* ================= LOGIN ================= */
+/* Nur mit korrektem Passwort wird die Seite freigeschaltet.
+   Die Demo-Schaltfläche füllt nur das Formular, sie ruft nicht login() auf
+   und schreibt nichts in die Datenbank. */
 window.login = () => {
   const pwVal = $('pw').value || "";
   if (pwVal === "LJH1950") {
@@ -272,14 +277,23 @@ window.login = () => {
   }
 };
 
-/* Demo-Fill (nur lokal, hilft beim Testen) */
-window.fillDemo = async () => {
-  // Beispielartikel anlegen, falls DB leer ist
-  await addDoc(collection(db,"artikel"),{name:"Hose",kat:"Herren",size:"M",count:5});
-  await addDoc(collection(db,"artikel"),{name:"Hose",kat:"Damen",size:"S",count:3});
-  await addDoc(collection(db,"artikel"),{name:"T-Shirt",kat:"Unisex",size:"L",count:8});
-  $('pw').value = "LJH1950";
-  login();
+/* Demo-Funktion: füllt nur das Eingabeformular lokal, gewährt aber keinen Zugriff */
+window.fillDemoForm = () => {
+  // Füllt das Formularfelder, schreibt aber nichts in Firestore und öffnet nicht die Seite
+  $('newName').value = "Hose";
+  $('newKat').value = "Herren";
+  $('newSize').value = "M";
+  $('newCount').value = "3";
+  // Hinweis für den Nutzer (kurz sichtbar)
+  const old = $('err').style.display;
+  $('err').style.display = "none";
+  const info = document.createElement('div');
+  info.style.color = "#666";
+  info.style.marginTop = "8px";
+  info.id = "demoInfo";
+  info.innerText = "Formular gefüllt. Zum Bearbeiten bitte mit Passwort anmelden.";
+  document.querySelector('.lockBox').appendChild(info);
+  setTimeout(()=>{ const el = $('demoInfo'); if(el) el.remove(); }, 4500);
 };
 
 /* ================= LADEN (aus Firestore) ================= */
@@ -318,6 +332,12 @@ function updateKatList(){
 
 /* ================= ARTIKEL HINZUFÜGEN ================= */
 window.addArticle = async () => {
+  // Sicherheitscheck: nur wenn Login erfolgt (lock versteckt) darf geschrieben werden
+  if (document.getElementById('lock').style.display !== 'none') {
+    alert("Nur nach Anmeldung möglich.");
+    return;
+  }
+
   const name = $('newName').value.trim();
   const kat = $('newKat').value.trim();
   const size = $('newSize').value.trim();
@@ -467,6 +487,11 @@ function render(){
 
 /* ================= PLUS (Erhöhen) ================= */
 window.plus = async (id) => {
+  // Sicherheitscheck: nur wenn angemeldet
+  if (document.getElementById('lock').style.display !== 'none') {
+    alert("Nur nach Anmeldung möglich.");
+    return;
+  }
   const a = data.find(x => x.id === id);
   if (!a) return;
   await updateDoc(doc(db,"artikel",id),{ count: a.count + 1 });
@@ -475,6 +500,11 @@ window.plus = async (id) => {
 
 /* ================= MINUS (Verkauf) ================= */
 window.minus = (id) => {
+  // Sicherheitscheck: nur wenn angemeldet
+  if (document.getElementById('lock').style.display !== 'none') {
+    alert("Nur nach Anmeldung möglich.");
+    return;
+  }
   current = id;
   // Anzeige des Artikels im Popup
   const a = data.find(x => x.id === id);
@@ -497,6 +527,12 @@ window.directPay = (yes) => {
 };
 
 window.saveDebt = async () => {
+  // Sicherheitscheck: nur wenn angemeldet
+  if (document.getElementById('lock').style.display !== 'none') {
+    alert("Nur nach Anmeldung möglich.");
+    return;
+  }
+
   const buyer = $('buyer').value.trim();
   const amount = $('amount').value.trim();
   if (!buyer || !amount) { alert("Bitte Name und Betrag eingeben."); return; }
@@ -592,11 +628,21 @@ function renderOpen(){
 
 /* ================= BEZAHLT / LÖSCHEN ================= */
 window.paid = async (id) => {
+  // Sicherheitscheck: nur wenn angemeldet
+  if (document.getElementById('lock').style.display !== 'none') {
+    alert("Nur nach Anmeldung möglich.");
+    return;
+  }
   await deleteDoc(doc(db,"offene",id));
   await load();
 };
 
 window.del = async (id) => {
+  // Sicherheitscheck: nur wenn angemeldet
+  if (document.getElementById('lock').style.display !== 'none') {
+    alert("Nur nach Anmeldung möglich.");
+    return;
+  }
   if (!confirm("Eintrag wirklich löschen?")) return;
   await deleteDoc(doc(db,"offene",id));
   await load();
@@ -604,13 +650,19 @@ window.del = async (id) => {
 
 /* ================= ARTIKEL LÖSCHEN ================= */
 window.removeArticle = async (id) => {
+  // Sicherheitscheck: nur wenn angemeldet
+  if (document.getElementById('lock').style.display !== 'none') {
+    alert("Nur nach Anmeldung möglich.");
+    return;
+  }
   if (!confirm("Artikel wirklich löschen?")) return;
   await deleteDoc(doc(db,"artikel",id));
   await load();
 };
 
 /* ================= INITIAL HINWEIS ================= */
-/* Seite bleibt gesperrt bis Login. Nutze Demo zum Testen oder gib Passwort ein. */
+/* Seite bleibt gesperrt bis Login. Die Demo-Schaltfläche füllt nur das Formular,
+   sie öffnet die Seite nicht und schreibt nichts in die Datenbank. */
 
 </script>
 
