@@ -177,9 +177,28 @@
         max-width: 350px;
     }
 </style>
+
+<!-- Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+<script>
+// Deine Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyDRItWcbRi-7s7j_72cXLg5Dp9kphS0nuo",
+  authDomain: "kleiderverwaltung.firebaseapp.com",
+  projectId: "kleiderverwaltung",
+  storageBucket: "kleiderverwaltung.firebasestorage.app",
+  messagingSenderId: "162232985824",
+  appId: "1:162232985824:web:0d18ebbc3c521b5e380885"
+};
+
+// Firebase initialisieren
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
 </head>
 <body>
-
 <!-- Passwort -->
 <div id="passwortOverlay">
     <div id="passwortBox">
@@ -191,9 +210,8 @@
 </div>
 
 <script>
-const PASSWORT = "LJH1950";
 function checkPasswort() {
-    if (document.getElementById("pwInput").value === PASSWORT) {
+    if (document.getElementById("pwInput").value === "LJH1950") {
         document.getElementById("passwortOverlay").style.display = "none";
     } else {
         document.getElementById("pwFehler").style.display = "block";
@@ -240,42 +258,57 @@ function checkPasswort() {
         <button id="popupCancel" class="secondary">Abbrechen</button>
     </div>
 </div>
-
 <script>
-let artikelListe = [];
-let offeneZahlungen = [];
-let aktuellerArtikelID = null;
-
-const STORAGE_KEY = "kleiderverwaltung_v4";
-
-function ladeDaten() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-        const data = JSON.parse(raw);
-        artikelListe = data.artikel || [];
-        offeneZahlungen = data.offen || [];
-    }
+// -------------------------------
+// FIREBASE – ARTIKEL SPEICHERN
+// -------------------------------
+async function ladeArtikel() {
+    const snapshot = await db.collection("artikel").get();
+    artikelListe = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderGruppen();
 }
 
-function speichereDaten() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        artikel: artikelListe,
-        offen: offeneZahlungen
-    }));
+async function speichereArtikel(a) {
+    await db.collection("artikel").doc(a.id).set(a);
 }
 
+async function loescheArtikel(id) {
+    await db.collection("artikel").doc(id).delete();
+}
+
+// -------------------------------
+// FIREBASE – OFFENE ZAHLUNGEN
+// -------------------------------
+async function ladeOffene() {
+    const snapshot = await db.collection("offene").get();
+    offeneZahlungen = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderOffene();
+}
+
+async function speichereOffene(eintrag) {
+    await db.collection("offene").doc(eintrag.id).set(eintrag);
+}
+
+async function loescheOffene(id) {
+    await db.collection("offene").doc(id).delete();
+}
+
+// -------------------------------
+// GRUPPIEREN
+// -------------------------------
 function gruppiereArtikel() {
     const gruppen = {};
-
     artikelListe.forEach(a => {
         const key = a.name + "___" + a.kategorie;
         if (!gruppen[key]) gruppen[key] = [];
         gruppen[key].push(a);
     });
-
     return gruppen;
 }
 
+// -------------------------------
+// RENDER – GRUPPEN
+// -------------------------------
 function renderGruppen() {
     const container = document.getElementById("gruppenContainer");
     container.innerHTML = "";
@@ -329,11 +362,14 @@ function renderGruppen() {
     });
 }
 
+// -------------------------------
+// RENDER – OFFENE ZAHLUNGEN
+// -------------------------------
 function renderOffene() {
     const div = document.getElementById("offeneListe");
     div.innerHTML = "";
 
-    offeneZahlungen.forEach((o, i) => {
+    offeneZahlungen.forEach(o => {
         const d = document.createElement("div");
         d.style.padding = "10px";
         d.style.borderBottom = "1px solid #ccc";
@@ -341,35 +377,52 @@ function renderOffene() {
         d.innerHTML = `
             <strong>${o.name}</strong> – ${o.artikel} (${o.groesse})<br>
             Betrag: <strong>${o.betrag} €</strong><br>
-            <button class="secondary small" onclick="bezahlt(${i})">Als bezahlt markieren</button>
+            <button class="secondary small" onclick="bezahlt('${o.id}')">Als bezahlt markieren</button>
         `;
 
         div.appendChild(d);
     });
 }
 
-function addArtikel(name, kategorie, groesse, bestand) {
-    artikelListe.push({
+// -------------------------------
+// ARTIKEL HINZUFÜGEN
+// -------------------------------
+document.getElementById("addForm").addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const a = {
         id: Date.now().toString(),
-        name, kategorie, groesse, bestand
-    });
-    speichereDaten();
+        name: document.getElementById("name").value,
+        kategorie: document.getElementById("kategorie").value,
+        groesse: document.getElementById("groesse").value,
+        bestand: parseInt(document.getElementById("bestand").value)
+    };
+
+    artikelListe.push(a);
+    await speichereArtikel(a);
+    renderGruppen();
+
+    e.target.reset();
+});
+
+// -------------------------------
+// +1 / –1 / LÖSCHEN
+// -------------------------------
+async function plus(id) {
+    const a = artikelListe.find(x => x.id === id);
+    a.bestand++;
+    await speichereArtikel(a);
     renderGruppen();
 }
 
-function plus(id) {
-    const a = artikelListe.find(x => x.id === id);
-    a.bestand++;
-    speichereDaten();
-    renderGruppen();
-}
+let aktuellerArtikelID = null;
 
 function minus(id) {
     aktuellerArtikelID = id;
     document.getElementById("popup").style.display = "flex";
 }
 
-popupSave.onclick = () => {
+popupSave.onclick = async () => {
     const name = popupName.value.trim();
     const betrag = popupBetrag.value.trim();
     if (!name || !betrag) return;
@@ -377,18 +430,23 @@ popupSave.onclick = () => {
     const a = artikelListe.find(x => x.id === aktuellerArtikelID);
     a.bestand--;
 
-    offeneZahlungen.push({
+    await speichereArtikel(a);
+
+    const eintrag = {
+        id: Date.now().toString(),
         name,
         betrag,
         artikel: a.name,
         groesse: a.groesse
-    });
+    };
+
+    offeneZahlungen.push(eintrag);
+    await speichereOffene(eintrag);
 
     popupName.value = "";
     popupBetrag.value = "";
     document.getElementById("popup").style.display = "none";
 
-    speichereDaten();
     renderGruppen();
     renderOffene();
 };
@@ -397,43 +455,30 @@ popupCancel.onclick = () => {
     document.getElementById("popup").style.display = "none";
 };
 
-function bezahlt(i) {
-    offeneZahlungen.splice(i, 1);
-    speichereDaten();
+async function bezahlt(id) {
+    offeneZahlungen = offeneZahlungen.filter(o => o.id !== id);
+    await loescheOffene(id);
     renderOffene();
 }
 
-function delArtikel(id) {
+async function delArtikel(id) {
     artikelListe = artikelListe.filter(a => a.id !== id);
-    speichereDaten();
+    await loescheArtikel(id);
     renderGruppen();
 }
 
-document.getElementById("addForm").addEventListener("submit", e => {
-    e.preventDefault();
-    addArtikel(
-        document.getElementById("name").value,
-        document.getElementById("kategorie").value,
-        document.getElementById("groesse").value,
-        parseInt(document.getElementById("bestand").value)
-    );
-    e.target.reset();
-});
+// -------------------------------
+// ALLES LADEN BEIM START
+// -------------------------------
+let artikelListe = [];
+let offeneZahlungen = [];
 
-document.getElementById("resetAll").onclick = () => {
-    if (confirm("Wirklich ALLE Daten löschen?")) {
-        artikelListe = [];
-        offeneZahlungen = [];
-        speichereDaten();
-        renderGruppen();
-        renderOffene();
-    }
-};
+async function start() {
+    await ladeArtikel();
+    await ladeOffene();
+}
 
-ladeDaten();
-renderGruppen();
-renderOffene();
+start();
 </script>
-
 </body>
 </html>
