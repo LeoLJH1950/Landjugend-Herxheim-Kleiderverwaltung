@@ -2,77 +2,148 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Kleiderverwaltung</title>
+<title>Landjugend Herxheim – Kleiderverwaltung</title>
 
 <style>
 :root {
     --blau:#0077cc;
     --gruen:#3cb043;
     --rot:#dc3545;
-    --hell:#f5f5f5;
+    --hellgrau:#f5f5f5;
 }
 
 body {
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     margin: 0;
-    background: var(--hell);
+    background: var(--hellgrau);
+}
+
+/* Passwort */
+#passwortOverlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#passwortBox {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 350px;
+    text-align: center;
 }
 
 header {
-    background: linear-gradient(90deg,var(--blau),var(--gruen));
-    color:white;
-    padding:20px;
-    text-align:center;
+    background: linear-gradient(90deg, var(--blau), var(--gruen));
+    color: white;
+    padding: 20px;
+    text-align: center;
 }
 
 .container {
-    max-width:900px;
-    margin:20px auto;
-    background:white;
-    padding:20px;
-    border-radius:10px;
+    max-width: 900px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+h2 {
+    border-left: 6px solid var(--gruen);
+    padding-left: 10px;
 }
 
 form {
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:10px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
 }
 
-input,select {
-    padding:6px;
+input, select {
+    padding: 6px;
 }
 
-button {
-    padding:6px 10px;
-    border:none;
-    cursor:pointer;
-}
+button.primary { background: var(--blau); color: white; }
+button.secondary { background: var(--gruen); color: white; }
+button.danger { background: var(--rot); color: white; }
+button.small { font-size: 12px; padding: 4px 6px; }
 
-.primary { background:var(--blau); color:white; }
-.secondary { background:var(--gruen); color:white; }
-.danger { background:var(--rot); color:white; }
-
-.group {
+.gruppe {
     background:#e9f5ff;
+    padding:12px;
     margin-top:10px;
-    padding:10px;
-    border-radius:6px;
+    cursor:pointer;
     font-weight:bold;
 }
 
-.item {
+.untergruppe {
+    display:none;
     margin-left:15px;
-    margin-top:5px;
-    padding:5px;
-    background:white;
+}
+
+table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+}
+
+th {
+    background:var(--blau);
+    color:white;
+}
+
+td {
     border:1px solid #ddd;
-    border-radius:5px;
+    padding:6px;
+}
+
+.low-stock {
+    background:#fff3cd;
+}
+
+#popup {
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:rgba(0,0,0,0.5);
+    display:none;
+    justify-content:center;
+    align-items:center;
+}
+
+#popupContent {
+    background:white;
+    padding:20px;
+    border-radius:8px;
 }
 </style>
 </head>
 
 <body>
+
+<!-- PASSWORT -->
+<div id="passwortOverlay">
+    <div id="passwortBox">
+        <h2>Passwort</h2>
+        <input type="password" id="pwInput">
+        <button onclick="checkPasswort()">Weiter</button>
+    </div>
+</div>
+
+<script>
+const PASSWORT="LJH1950";
+function checkPasswort(){
+    if(document.getElementById("pwInput").value===PASSWORT){
+        document.getElementById("passwortOverlay").style.display="none";
+    }
+}
+</script>
 
 <header>
 <h1>Kleiderverwaltung</h1>
@@ -80,24 +151,40 @@ button {
 
 <div class="container">
 
-<h2>Artikel hinzufügen</h2>
+<h2>Neuen Artikel hinzufügen</h2>
 
 <form id="addForm">
-    <input id="name" placeholder="Name">
+    <input id="name" placeholder="Artikelname">
     <select id="kategorie">
         <option>Damen</option>
         <option>Herren</option>
         <option>Unisex</option>
         <option>Kinder</option>
     </select>
-    <input id="groesse" placeholder="Größe (S/M/L)">
+    <input id="groesse" placeholder="Größe">
     <input id="bestand" type="number" placeholder="Bestand">
-    <button class="primary">Hinzufügen</button>
+    <button class="primary" type="submit">Hinzufügen</button>
 </form>
 
 <h2>Bestand</h2>
-<div id="container"></div>
+<div id="gruppenContainer"></div>
 
+<h2>Offene Zahlungen</h2>
+<div id="offeneListe"></div>
+
+<button id="resetAll" class="danger">Alles löschen</button>
+
+</div>
+
+<!-- POPUP -->
+<div id="popup">
+<div id="popupContent">
+    <h3>Offene Zahlung</h3>
+    <input id="popupName" placeholder="Name">
+    <input id="popupBetrag" placeholder="Betrag">
+    <button id="popupSave" class="primary">Speichern</button>
+    <button id="popupCancel" class="secondary">Abbrechen</button>
+</div>
 </div>
 
 <!-- FIREBASE -->
@@ -105,152 +192,215 @@ button {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
 import {
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs,
-    updateDoc,
-    deleteDoc,
-    doc
+getFirestore,
+collection,
+addDoc,
+getDocs,
+updateDoc,
+deleteDoc,
+doc
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCD0Pz2LpOdFQ6-UrlNCuHQ5sqW87SgsDs",
-    authDomain: "ljh-kleider.firebaseapp.com",
-    projectId: "ljh-kleider",
-    storageBucket: "ljh-kleider.firebasestorage.app",
-    messagingSenderId: "76446271591",
-    appId: "1:76446271591:web:ecd096fa6c9afa570fecc2"
+apiKey:"AIzaSyCD0Pz2LpOdFQ6-UrlNCuHQ5sqW87SgsDs",
+authDomain:"ljh-kleider.firebaseapp.com",
+projectId:"ljh-kleider",
+storageBucket:"ljh-kleider.firebasestorage.app",
+messagingSenderId:"76446271591",
+appId:"1:76446271591:web:ecd096fa6c9afa570fecc2"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-let data = [];
-
-// ================= ADD =================
-async function addArtikel() {
-
-    const name = document.getElementById("name").value.trim();
-    const kategorie = document.getElementById("kategorie").value;
-    const groesse = document.getElementById("groesse").value.trim();
-    const bestand = Number(document.getElementById("bestand").value);
-
-    if(!name || !groesse || isNaN(bestand)) return;
-
-    await addDoc(collection(db,"artikel"),{
-        name,
-        kategorie,
-        groesse,
-        bestand
-    });
-
-    document.getElementById("addForm").reset();
-    load();
-}
+let artikelListe=[];
+let offeneZahlungen=[];
+let aktuelleID=null;
 
 // ================= LOAD =================
-async function load() {
+async function load(){
 
-    data = [];
+artikelListe=[];
+offeneZahlungen=[];
 
-    const snap = await getDocs(collection(db,"artikel"));
+const a=await getDocs(collection(db,"artikel"));
+a.forEach(d=>artikelListe.push({id:d.id,...d.data()}));
 
-    snap.forEach(d=>{
-        data.push({id:d.id,...d.data()});
-    });
+const o=await getDocs(collection(db,"offene"));
+o.forEach(d=>offeneZahlungen.push({id:d.id,...d.data()}));
 
-    render();
+render();
+renderOffene();
+}
+
+// ================= ADD =================
+async function addArtikel(){
+
+const name=nameEl.value.trim();
+const kategorie=kategorieEl.value;
+const groesse=groesseEl.value.trim();
+const bestand=Number(bestandEl.value);
+
+if(!name||!groesse||isNaN(bestand)) return;
+
+await addDoc(collection(db,"artikel"),{
+name,kategorie,groesse,bestand
+});
+
+addForm.reset();
+load();
 }
 
 // ================= GROUP =================
-function group() {
+function group(){
 
-    const g = {};
+const g={};
 
-    data.forEach(a=>{
-        const key = a.name + "___" + a.kategorie;
-        if(!g[key]) g[key]=[];
-        g[key].push(a);
-    });
+artikelListe.forEach(a=>{
+const key=a.name+"___"+a.kategorie;
+if(!g[key])g[key]=[];
+g[key].push(a);
+});
 
-    return g;
+return g;
 }
 
 // ================= RENDER =================
-function render() {
+function render(){
 
-    const c = document.getElementById("container");
-    c.innerHTML = "";
+const c=document.getElementById("gruppenContainer");
+c.innerHTML="";
 
-    const groups = group();
+const groups=group();
 
-    Object.keys(groups).forEach(key=>{
+Object.keys(groups).forEach(key=>{
 
-        const [name,kat] = key.split("___");
+const[name,kat]=key.split("___");
 
-        const box = document.createElement("div");
-        box.className="group";
-        box.innerHTML=`${name} (${kat})`;
+const box=document.createElement("div");
+box.className="gruppe";
+box.innerHTML=`${name} (${kat})`;
 
-        groups[key].forEach(a=>{
+const inner=document.createElement("div");
+inner.className="untergruppe";
+inner.style.display="block";
 
-            const item = document.createElement("div");
-            item.className="item";
+groups[key].forEach(a=>{
 
-            item.innerHTML=`
-                Größe: <b>${a.groesse}</b>
-                | Bestand: <b>${a.bestand}</b>
+const div=document.createElement("div");
 
-                <button onclick="plus('${a.id}')">+1</button>
-                <button onclick="minus('${a.id}')">-1</button>
-                <button onclick="del('${a.id}')">Löschen</button>
-            `;
+div.innerHTML=`
+Größe <b>${a.groesse}</b> |
+Bestand <b>${a.bestand}</b>
 
-            box.appendChild(item);
-        });
+<button onclick="plus('${a.id}')">+1</button>
+<button onclick="minus('${a.id}')">-1</button>
+<button onclick="del('${a.id}')">Löschen</button>
+<hr>
+`;
 
-        c.appendChild(box);
-    });
+inner.appendChild(div);
+});
+
+box.appendChild(inner);
+c.appendChild(box);
+});
+}
+
+// ================= OFFENE =================
+function renderOffene(){
+
+const c=document.getElementById("offeneListe");
+c.innerHTML="";
+
+offeneZahlungen.forEach(o=>{
+
+const div=document.createElement("div");
+
+div.innerHTML=`
+<b>${o.name}</b> - ${o.artikel} (${o.groesse})<br>
+${o.betrag} €
+`;
+
+c.appendChild(div);
+});
 }
 
 // ================= ACTIONS =================
-window.plus = async id => {
+window.plus=async id=>{
 
-    const a = data.find(x=>x.id===id);
+const a=artikelListe.find(x=>x.id===id);
 
-    await updateDoc(doc(db,"artikel",id),{
-        bestand:a.bestand+1
-    });
+await updateDoc(doc(db,"artikel",id),{
+bestand:a.bestand+1
+});
 
-    load();
+load();
 };
 
-window.minus = async id => {
+window.minus=async id=>{
 
-    const a = data.find(x=>x.id===id);
+const a=artikelListe.find(x=>x.id===id);
 
-    await updateDoc(doc(db,"artikel",id),{
-        bestand:a.bestand-1
-    });
+aktuelleID=id;
 
-    load();
+document.getElementById("popup").style.display="flex";
 };
 
-window.del = async id => {
+popupSave.onclick=async()=>{
 
-    await deleteDoc(doc(db,"artikel",id));
+const a=artikelListe.find(x=>x.id===aktuelleID);
 
-    load();
+await updateDoc(doc(db,"artikel",aktuelleID),{
+bestand:a.bestand-1
+});
+
+await addDoc(collection(db,"offene"),{
+name:popupName.value,
+betrag:popupBetrag.value,
+artikel:a.name,
+groesse:a.groesse
+});
+
+popupName.value="";
+popupBetrag.value="";
+popup.style.display="none";
+
+load();
+};
+
+popupCancel.onclick=()=>popup.style.display="none";
+
+window.del=async id=>{
+
+await deleteDoc(doc(db,"artikel",id));
+load();
 };
 
 // ================= FORM =================
-document.getElementById("addForm").addEventListener("submit",e=>{
-    e.preventDefault();
-    addArtikel();
+const addForm=document.getElementById("addForm");
+const nameEl=document.getElementById("name");
+const kategorieEl=document.getElementById("kategorie");
+const groesseEl=document.getElementById("groesse");
+const bestandEl=document.getElementById("bestand");
+
+addForm.addEventListener("submit",e=>{
+e.preventDefault();
+addArtikel();
 });
 
-// ================= START =================
+// ================= RESET =================
+resetAll.onclick=async()=>{
+
+const a=await getDocs(collection(db,"artikel"));
+a.forEach(d=>deleteDoc(doc(db,"artikel",d.id)));
+
+const o=await getDocs(collection(db,"offene"));
+o.forEach(d=>deleteDoc(doc(db,"offene",d.id)));
+
+load();
+};
+
 load();
 
 </script>
